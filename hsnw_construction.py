@@ -52,3 +52,4 @@ class HNSW:
     #returns the entry point ? maybe an id ?
     def entry_point(self):
         pass
+    
