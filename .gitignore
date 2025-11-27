@@ -7,7 +7,7 @@ __pycache__/
 *.so
 
 venv
-
+Datasets/siftsmall
 # Distribution / packaging
 .Python
 build/
