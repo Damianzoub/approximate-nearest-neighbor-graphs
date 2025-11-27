@@ -15,7 +15,11 @@ class HNSW:
         self.rng = np.random.default_rng(seed) #more faster
         self.entry_id = None 
 
-
+    """
+    From paper  algorithm 1: full insertion
+                algorithm 2: searching layer to get candidate list
+                algorithm 3/4 : selecting M neighbors for connection
+    """
     #return last level
     def max_level(self) -> int: 
         return self.maxlevel
@@ -39,6 +43,7 @@ class HNSW:
         while self.rng.random() < np.exp(-1.0/l):
             L+=1
         return L
+        
     
     #calculate dist 
     def dist(self,a:np.ndarray,b:np.ndarray)->float:
