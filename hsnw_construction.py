@@ -1,5 +1,5 @@
 import numpy as np 
-from heapq import heappush,heappop
+import heapq
 import math
 class HNSW_NEW:
 
@@ -57,19 +57,19 @@ class HNSW_NEW:
                 self.layers.append({})
             self.maxlevel = l 
         
-        current_entryPoint = self.entry_id 
+        ep = self.entry_id
         L = old_top 
 
         #TODO: IMPLEMENT SEARCH_LAYER
         for lc in range(L,l,-1):
-            ep = self._search_layer_greedy(vec,current_entryPoint,lc) #search if they are existing upper layers thorught this node
+            ep = self._search_layer_greedy(vec,ep,lc,ef=1) #search if they are existing upper layers thorught this node
         
         #phase 2: for layer min(L,l) down to 0 use efconstruction,selet neighbors ,connect ,prune
         for lc in range(min(L,l), -1 ,-1):
             if node_id not in self.layers[lc]:
                 self.layers[lc][node_id] = set()
-            
-            W = self._search_layer(vec,current_entryPoint,lc,self.efConstruction)
+            #θα το σκεφτω μετα το current_entryPoint αν ειναι σωστο
+            W = self._search_layer(vec,ep,lc,self.efConstruction)
             neighbors = self._select_neighbors(vec,W,lc,self.M if lc > 0 else self.M0)
 
             for nb in neighbors:
@@ -88,16 +88,66 @@ class HNSW_NEW:
         if l > old_top:
             self.entry_id = node_id 
             return node_id
-    
-    def _search_layer_greedy(self):
-        pass 
-        
-    def _search_layer(self):
-        pass
+    #searchs from entry point all the way to the layer that they new node exists
+    def _search_layer_greedy(self,vec,curr_entryPointID:int,lc:int,ef:int=1)->int:
+
+        best = curr_entryPointID
+        best_dist = self.dist(vec,self.vectors[best])
+        improved = True
+        while improved:
+            improved = False 
+            neighbors = self.layers[lc].get(best,set())
+
+            for nb in neighbors:
+                d = self.dist(vec,self.vectors[nb])
+                if d < best_dist:
+                    best_dist = d
+                    best = nb 
+                    improved = True 
+                    break
+        return best        
+    #beam_search   
+    def _search_layer(self,vec,ep_id:int,layer:int,ef:int):
+        if layer < 0 or layer >= len(self.layers) or len(self.layers[layer])==0:
+            return []
+        visited =[] #for visited nodes
+        W = [] #w: beam of the best nodes
+        C = [] #min-heap
+
+        dist_ep = self.dist(vec,self.vectors[ep_id])
+        visited.append(ep_id)
+        heapq.heappush(C,(dist_ep,ep_id))
+        W.append((dist_ep,ep_id))
+        W.sort(key=lambda x: x[0]) #sort ascending to keep the furthest as the last one
+
+        while C:
+            dist_c,c_id = heapq.heappop(C)
+            dist_f , f_id = W[-1]
+
+            #if worst than the last one then break
+            if dist_c > dist_f:
+                break
+            neighbors = self.layers[layer].get(c_id,set())
+            for nb in neighbors:
+                if nb in visited:
+                    continue
+                visited.add(nb)
+                d = self.dist(vec,self.vectors[nb])
+
+                if len(W) < ef or d < W[-1][0]: #if we have space or d better than the last element in the W
+                    heapq.heappush(C,(d,nb))
+                    W.append((d,nb))
+                    W.sort(key=lambda x: x[0])
+
+                    if len(W) > ef:
+                        W.pop()
+            W.sort(key=lambda x:x[0])
+            return [node_id for (dist,node_id) in W]
 
     def _prune_connections(self):
         pass 
     
+    #here we check about how many nodes are going to become neighbors from the select_layers candidates 
     def _select_neighbors(self):
         pass
     #search
@@ -137,8 +187,7 @@ class HNSW_NEW:
     def _prune_node(self,u,level):
         pass
     #beam search implementation
-    def beam_search(self):
-        pass
+    
 
 
 
