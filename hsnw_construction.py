@@ -148,8 +148,41 @@ class HNSW_NEW:
         pass 
     
     #here we check about how many nodes are going to become neighbors from the select_layers candidates 
-    def _select_neighbors(self):
-        pass
+    def _select_neighbors_simple(self,vec,candidates,layer:int,Mmax:int):
+        unique_candidates = list(dict.fromkeys(candidates)) #remove duplicates
+
+        if len(unique_candidates) <= Mmax:
+            return unique_candidates
+        dist_list = []
+        for nb in unique_candidates:
+            d = self.dist(vec,self.vectors[nb])
+            dist_list.append((d,nb))
+        dist_list.sort(key=lambda x: x[0])
+        selected = [nb for (d,nb) in dist_list[:Mmax]]
+        return selected
+    
+    def select_neighbors_heuristic(self,vec,candidates,layer:int,Mmax:int):
+        unique_candidates = list(dict.fromkeys(candidates))
+        cand_with_dist = []
+        for nb in unique_candidates:
+            d = self.dist(vec,self.vectors[nb])
+            cand_with_dist.append((d,nb))
+        
+        cand_with_dist.sort(key=lambda x: x[0])
+        R =[]
+        for d_e,e in cand_with_dist:
+            if len(R)>=Mmax:
+                break
+            good = True 
+            for d_r,r in R:
+                d_er = self.dist(self.vectors[e],self.vectors[r])
+                if d_er < d_e:
+                    good =False 
+                    break 
+                    
+                if good:
+                    R.append((d_e,e))
+        return R
     #search
     def search(self,k):
         pass 
@@ -172,9 +205,6 @@ class HNSW_NEW:
         else:
             raise ValueError("Unknown metric")
 
-    #select neighbors
-    def select_neighbors(self):
-        pass
 
     #returns the entry point ? maybe an id ?
     def entry_point(self):
