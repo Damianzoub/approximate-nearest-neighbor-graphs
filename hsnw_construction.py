@@ -143,9 +143,6 @@ class HNSW_NEW:
                         W.pop()
             W.sort(key=lambda x:x[0])
             return [node_id for (dist,node_id) in W]
-
-    def _prune_connections(self):
-        pass 
     
     #here we check about how many nodes are going to become neighbors from the select_layers candidates 
     def _select_neighbors_simple(self,vec,candidates,layer:int,Mmax:int):
@@ -203,7 +200,7 @@ class HNSW_NEW:
                     R.append((d_e,e))
                     R_ids.add(e)
         return [e for (d_e,e) in R]
-        pass 
+         
 
     def select_neighbors_heuristic(self,vec,candidates,layer:int,Mmax:int): #a little bit different from mine
         unique_candidates = list(dict.fromkeys(candidates))
