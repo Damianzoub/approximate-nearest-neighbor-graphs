@@ -70,7 +70,7 @@ class HNSW_NEW:
                 self.layers[lc][node_id] = set()
             #θα το σκεφτω μετα το current_entryPoint αν ειναι σωστο
             W = self._search_layer(vec,ep,lc,self.efConstruction)
-            neighbors = self._select_neighbors(vec,W,lc,self.M if lc > 0 else self.M0)
+            neighbors = self.select_neighbors_heuristic(vec,W,lc,self.M if lc > 0 else self.M0)
 
             for nb in neighbors:
                 if nb not in self.layers[lc]:
@@ -131,7 +131,7 @@ class HNSW_NEW:
             for nb in neighbors:
                 if nb in visited:
                     continue
-                visited.add(nb)
+                visited.append(nb)
                 d = self.dist(vec,self.vectors[nb])
 
                 if len(W) < ef or d < W[-1][0]: #if we have space or d better than the last element in the W
@@ -161,7 +161,51 @@ class HNSW_NEW:
         selected = [nb for (d,nb) in dist_list[:Mmax]]
         return selected
     
-    def select_neighbors_heuristic(self,vec,candidates,layer:int,Mmax:int):
+    def _select_neighbors_heuristic_paper(self,vec,candidates,layer:int,M:int,extend_candidates:bool=True,keep_pruned_connections:bool=False):
+        R = []
+        R_ids = set()
+        W_set = set(candidates)
+        W = []
+        for nb in W_set:
+            d = self.dist(vec,self.vectors[nb])
+            heapq.heappush(W,(d,nb))
+        if extend_candidates:
+            original_C = list(W_set)
+            for e in original_C:
+                neighs = self.layers[layer].get(e,set())
+                for eadj in neighs:
+                    if eadj not in W_set:
+                        W_set.add(eadj)
+                        d = self.dist(vec,self.vectors[eadj])
+                        heapq.heappush(W,(d,eadj))
+        
+        Wd =[]
+        while W and len(R) < M:
+            d_e , e = heapq.heappop(W)
+
+            if not R:
+                R.append((d_e,e))
+                R_ids.add(e)
+            else:
+                min_d_in_R = min(d_r for (d_r,r) in R)
+                if d_e < min_d_in_R:
+                    R.appned((d_e,e))
+                    R_ids.add(e)
+                else:
+                    Wd.append((d_e,e))
+        
+        if keep_pruned_connections and len(R) < M and Wd:
+            Wd.sort(key=lambda x: x[0])
+            for d_e, e in Wd:
+                if len(R) >= M:
+                    break
+                if e not in R_ids:
+                    R.append((d_e,e))
+                    R_ids.add(e)
+        return [e for (d_e,e) in R]
+        pass 
+
+    def select_neighbors_heuristic(self,vec,candidates,layer:int,Mmax:int): #a little bit different from mine
         unique_candidates = list(dict.fromkeys(candidates))
         cand_with_dist = []
         for nb in unique_candidates:
@@ -180,20 +224,29 @@ class HNSW_NEW:
                     good =False 
                     break 
                     
-                if good:
-                    R.append((d_e,e))
+            if good:
+                R.append((d_e,e))
         return R
     #search
-    def search(self,k):
-        pass 
+    def _query(self,q_vec,K,numSearch): #algorithms 5 k-nn search
+        if self.entry_id is None:
+            return []
+        ep = self.entry_id
+        L = self.maxlevel
+        #greedy in the above layers
+        for lc in range(L,0,-1):
+            W = self._search_layer_greedy(q_vec,ep,lc,ef=1)
+            if not W:
+                break
+            ep = W[0] #most closest to q_vec
+        W = self._search_layer(q_vec,ep,0,numSearch)
+        return W[:K]
 
     #probability of levels
-    # l = 1/ln(M)
+    # mL=l = 1/ln(M)
     def probab_levels(self,l): 
-        L=0 
-        while self.rng.random() < np.exp(-1.0/l):
-            L+=1
-        return L
+        U = self.rng.random()
+        return int(-math.log()*l)
         
     
     #calculate dist 
@@ -210,13 +263,31 @@ class HNSW_NEW:
     def entry_point(self):
         return self.entry_id
 
-    #connect from node level and below
-    def _connect(self,u,v,level):
-        pass
+    def _prune_connections(self,node_id:int,layer:int,Mmax:int):
+        neigh_set = self.layers[layer].get(node_id,set())
+        if len(neigh_set) <= Mmax:
+            return neigh_set
+        
+        neighbors = list(neigh_set)
+        q_vec = self.vectors[node_id]
 
-    def _prune_node(self,u,level):
-        pass
-    #beam search implementation
+        if getattr(self,"use_heuristic",False):
+            new_neigh_list = self._select_neighbors_heuristic_paper(
+                q_vec,neighbors,layer=layer,M=Mmax,extend_candidates=True,keep_pruned_connections=False
+            )
+        else:
+            new_neigh_list = self._select_neighbors_simple(
+                q_vec,neighbors,M=Mmax
+            )
+        new_neigh_set = set(new_neigh_list)
+        removed = neigh_set-new_neigh_set
+        #maintain bidirectionality
+        for nb in removed:
+            if nb in self.layers[layer]:
+                self.layers[layer][nb].discard(node_id)
+        self.layers[layer][node_id] = new_neigh_set
+        return new_neigh_set
+        
     
 
 
