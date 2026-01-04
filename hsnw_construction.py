@@ -110,12 +110,12 @@ class HNSW_NEW:
     def _search_layer(self,vec,ep_id:int,layer:int,ef:int):
         if layer < 0 or layer >= len(self.layers) or len(self.layers[layer])==0:
             return []
-        visited =[] #for visited nodes
+        visited =set() #for visited nodes
         W = [] #w: beam of the best nodes
         C = [] #min-heap
 
         dist_ep = self.dist(vec,self.vectors[ep_id])
-        visited.append(ep_id)
+        visited.add(ep_id)
         heapq.heappush(C,(dist_ep,ep_id))
         W.append((dist_ep,ep_id))
         W.sort(key=lambda x: x[0]) #sort ascending to keep the furthest as the last one
@@ -131,7 +131,7 @@ class HNSW_NEW:
             for nb in neighbors:
                 if nb in visited:
                     continue
-                visited.append(nb)
+                visited.add(nb)
                 d = self.dist(vec,self.vectors[nb])
 
                 if len(W) < ef or d < W[-1][0]: #if we have space or d better than the last element in the W
@@ -142,7 +142,7 @@ class HNSW_NEW:
                     if len(W) > ef:
                         W.pop()
             W.sort(key=lambda x:x[0])
-            return [node_id for (dist,node_id) in W]
+        return [node_id for (dist,node_id) in W]
     
     #here we check about how many nodes are going to become neighbors from the select_layers candidates 
     def _select_neighbors_simple(self,vec,candidates,layer:int,Mmax:int):
@@ -186,7 +186,7 @@ class HNSW_NEW:
             else:
                 min_d_in_R = min(d_r for (d_r,r) in R)
                 if d_e < min_d_in_R:
-                    R.appned((d_e,e))
+                    R.append((d_e,e))
                     R_ids.add(e)
                 else:
                     Wd.append((d_e,e))
@@ -223,7 +223,7 @@ class HNSW_NEW:
                     
             if good:
                 R.append((d_e,e))
-        return R
+        return [e for (d_e,e) in R]
     #search
     def _query(self,q_vec,K,numSearch): #algorithms 5 k-nn search
         if self.entry_id is None:
@@ -232,10 +232,8 @@ class HNSW_NEW:
         L = self.maxlevel
         #greedy in the above layers
         for lc in range(L,0,-1):
-            W = self._search_layer_greedy(q_vec,ep,lc,ef=1)
-            if not W:
-                break
-            ep = W[0] #most closest to q_vec
+            ep = self._search_layer_greedy(q_vec,ep,lc,ef=1)
+        
         W = self._search_layer(q_vec,ep,0,numSearch)
         return W[:K]
 
@@ -243,7 +241,7 @@ class HNSW_NEW:
     # mL=l = 1/ln(M)
     def probab_levels(self,l): 
         U = self.rng.random()
-        return int(-math.log()*l)
+        return int(-math.log(U)*l)
         
     
     #calculate dist 
