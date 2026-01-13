@@ -87,7 +87,7 @@ class HNSW_NEW:
         
         if l > old_top:
             self.entry_id = node_id 
-            return node_id
+        return node_id
     #searchs from entry point all the way to the layer that they new node exists
     def _search_layer_greedy(self,vec,curr_entryPointID:int,lc:int,ef:int=1)->int:
 
@@ -240,7 +240,7 @@ class HNSW_NEW:
     #probability of levels
     # mL=l = 1/ln(M)
     def probab_levels(self,l): 
-        U = self.rng.random()
+        U = max(self.rng.random(),1e-12)
         return int(-math.log(U)*l)
         
     
@@ -272,7 +272,7 @@ class HNSW_NEW:
             )
         else:
             new_neigh_list = self._select_neighbors_simple(
-                q_vec,neighbors,M=Mmax
+                q_vec,neighbors,layer,Mmax
             )
         new_neigh_set = set(new_neigh_list)
         removed = neigh_set-new_neigh_set
