@@ -1,8 +1,11 @@
 #include "util.h"
 #include <cmath>
+#include <algorithm>
 
-LevelGenerator::LevelGenerator(int seed,float level_mult) : rng_(seed), unif_(0.0f,1.0f),level_mult(level_mult){
-    float u = unif_(rng);
-    if (u < 1e-7f) u = 1e-7f;
-    return static_cast<int>(-std::log(u)*level_mult)
+LevelGenerator::LevelGenerator(int seed, float mL):
+rng_(seed),unif_(0.0f,1.0f), mL_(mL){}
+
+int LevelGenerator::sampleLevel(){
+    float u = std::max(unif_(rng_),1e-12f);
+    return static_cast<int>(-std::log(u)*mL);
 }
