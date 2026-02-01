@@ -1,22 +1,15 @@
 import numpy as np
+import os 
+def read_ivecs(fname):
+    if not os.path.isfile(fname):
+        raise FileNotFoundError(f"ivecs file not found: {fname}")
+    a = np.fromfile(fname, dtype='int32')
+    if a.size == 0:
+        raise ValueError(f"ivecs file is empty: {fname}")
+    d = a[0]
+    
+    return a.reshape(-1, d + 1)[:, 1:].copy()
 
-def read_fvecs(path):
-    data = np.fromfile(path,dtype=np.int32)
-    if not data:
-        raise ValueError("File is empty or could not be read.")
-    dim = data[0]
-    assert data.shape%(dim+1) == 0, "File size is not consistent with fvecs format."
-    n = data.shape[0]//(dim+1)
-    data = data.reshape(n,dim+1)[:,1:].astype('float32')
 
-    return data 
-
-def read_ivecs(path):
-    data = np.fromfile(path,dtype=np.int32)
-    if not data:
-        raise ValueError("File is empty or wrong file path")
-    dim = data[0]
-    assert data.shape%(dim+1) == 0, "File size is not consistent with ivecs format."
-    n = data.shape[0]//(dim+1)
-    data = data.reshape(n,dim+1)[:,1:].astype('int32')
-    return data 
+def read_fvecs(fname):
+    return read_ivecs(fname).view('float32')
