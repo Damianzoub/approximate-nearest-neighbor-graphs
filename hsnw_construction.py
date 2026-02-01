@@ -15,6 +15,7 @@ class HNSW_NEW:
         self.rng = np.random.default_rng(seed) #more faster
         self.entry_id = None 
         self.mL = 1.0/math.log(self.M)
+        self.use_heuristic = True 
     """
     From paper  algorithm 1: full insertion
                 algorithm 2: searching layer to get candidate list
@@ -93,8 +94,8 @@ class HNSW_NEW:
 
         best = curr_entryPointID
         best_dist = self.dist(vec,self.vectors[best])
-        improved = True
-        while improved:
+        
+        while True:
             improved = False 
             neighbors = self.layers[lc].get(best,set())
 
@@ -104,45 +105,47 @@ class HNSW_NEW:
                     best_dist = d
                     best = nb 
                     improved = True 
-                    break
+                    
+            if not improved:
+                break
         return best        
     #beam_search   
     def _search_layer(self,vec,ep_id:int,layer:int,ef:int):
-        if layer < 0 or layer >= len(self.layers) or len(self.layers[layer])==0:
+        if layer < 0 or layer >= len(self.layers) or len(self.layers[layer]) ==0:
             return []
-        visited =set() #for visited nodes
-        W = [] #w: beam of the best nodes
-        C = [] #min-heap
+        if ep_id not in self.vectors:
+            return []
 
+        visited = set()
+        C = []
+        W = []
         dist_ep = self.dist(vec,self.vectors[ep_id])
         visited.add(ep_id)
         heapq.heappush(C,(dist_ep,ep_id))
-        W.append((dist_ep,ep_id))
-        W.sort(key=lambda x: x[0]) #sort ascending to keep the furthest as the last one
+        heapq.heappush(W,(-dist_ep,ep_id)) #max-heap
 
         while C:
-            dist_c,c_id = heapq.heappop(C)
-            dist_f , f_id = W[-1]
-
-            #if worst than the last one then break
-            if dist_c > dist_f:
+            dist_c, c_id = heapq.heappop(C)
+            worst_dist = -W[0][0]
+            if dist_c > worst_dist:
                 break
-            neighbors = self.layers[layer].get(c_id,set())
-            for nb in neighbors:
+                
+            for nb in self.layers[layer].get(c_id,set()):
                 if nb in visited:
                     continue
                 visited.add(nb)
                 d = self.dist(vec,self.vectors[nb])
-
-                if len(W) < ef or d < W[-1][0]: #if we have space or d better than the last element in the W
+                if len(W) < ef:
                     heapq.heappush(C,(d,nb))
-                    W.append((d,nb))
-                    W.sort(key=lambda x: x[0])
-
-                    if len(W) > ef:
-                        W.pop()
-            W.sort(key=lambda x:x[0])
-        return [node_id for (dist,node_id) in W]
+                    heapq.heappush(W,(-d,nb))
+                else:
+                    worst_dist = -W[0][0]
+                    if d < worst_dist:
+                        heapq.heappush(C,(d,nb))
+                        heapq.heapreplace(W,(-d,nb))
+        result = [(-neg_d,node_id) for (neg_d,node_id) in W]
+        result.sort(key=lambda x: x[0])
+        return [node_id for (dist,node_id) in result]
     
     #here we check about how many nodes are going to become neighbors from the select_layers candidates 
     def _select_neighbors_simple(self,vec,candidates,layer:int,Mmax:int):
@@ -159,47 +162,44 @@ class HNSW_NEW:
         return selected
     
     def _select_neighbors_heuristic_paper(self,vec,candidates,layer:int,M:int,extend_candidates:bool=True,keep_pruned_connections:bool=False):
-        R = []
-        R_ids = set()
         W_set = set(candidates)
-        W = []
-        for nb in W_set:
-            d = self.dist(vec,self.vectors[nb])
-            heapq.heappush(W,(d,nb))
-        if extend_candidates:
-            original_C = list(W_set)
-            for e in original_C:
-                neighs = self.layers[layer].get(e,set())
-                for eadj in neighs:
-                    if eadj not in W_set:
-                        W_set.add(eadj)
-                        d = self.dist(vec,self.vectors[eadj])
-                        heapq.heappush(W,(d,eadj))
-        
-        Wd =[]
-        while W and len(R) < M:
-            d_e , e = heapq.heappop(W)
 
-            if not R:
-                R.append((d_e,e))
-                R_ids.add(e)
-            else:
-                min_d_in_R = min(d_r for (d_r,r) in R)
-                if d_e < min_d_in_R:
-                    R.append((d_e,e))
-                    R_ids.add(e)
-                else:
-                    Wd.append((d_e,e))
-        
-        if keep_pruned_connections and len(R) < M and Wd:
-            Wd.sort(key=lambda x: x[0])
-            for d_e, e in Wd:
-                if len(R) >= M:
+        if extend_candidates:
+            base = list(W_set)
+            for e in base:
+                for eadj in self.layers[layer].get(e,set()):
+                    W_set.add(eadj)
+            
+        cand = []
+        for e in W_set:
+            d_qe = self.dist(vec,self.vectors[e])
+            cand.append((d_qe,e))
+        cand.sort(key=lambda x: x[0])
+
+        R = []
+        discarded = []
+        for d_e,e in cand:
+            good = True
+            for r in R:
+                if self.dist(self.vectors[e],self.vectors[r]) < d_e:
+                    good = False
                     break
-                if e not in R_ids:
-                    R.append((d_e,e))
-                    R_ids.add(e)
-        return [e for (d_e,e) in R]
+            
+            if good:
+                R.append(e)
+                if len(R) == M:
+                    break
+            else:
+                discarded.append((d_e,e))
+        
+        if keep_pruned_connections and len(R) < M:
+            discarded.sort(key=lambda x: x[0])
+            for _,e in discarded:
+                if e not in R:
+                    R.append(e)
+                    if len(R) == M:
+                        break 
+        return R
          
 
     def select_neighbors_heuristic(self,vec,candidates,layer:int,Mmax:int): #a little bit different from mine
@@ -242,14 +242,40 @@ class HNSW_NEW:
     def probab_levels(self,l): 
         U = max(self.rng.random(),1e-12)
         return int(-math.log(U)*l)
-        
     
+    #so i can compare the results with faiss and hnswlib
+    def search(self,Xq:np.ndarray,k:int , efSearch:int):
+        Xq = np.asarray(Xq,dtype=np.float32)
+        I = np.empty((Xq.shape[0],k),dtype=np.int32)
+        D = np.empty((Xq.shape[0],k),dtype=np.float32)
+
+        for i , q in enumerate(Xq):
+            ids = self._query(q,K=k,numSearch=efSearch)
+            #fill output
+            I[i,:len(ids)] = ids
+            if len(ids) < k:
+                I[i,len(ids):] =-1
+            
+            #compute distances for returned ids
+            for j in range(k):
+                idx = I[i,j]
+                if idx ==-1:
+                    D[i,j] = np.inf
+                else:
+                    D[i,j] = self.dist(q,self.vectors[int(idx)])
+        return D,I
+
+
     #calculate dist 
     def dist(self,a:np.ndarray,b:np.ndarray)->float:
         if self.metric =='l2':
-            return float(np.linalg.norm(a-b))
+            diff = a-b
+            return float(np.dot(diff,diff))
         elif self.metric =='cosine':
-            return 1.0- float( np.dot(a,b)) 
+            denom = (np.linalg.norm(a)*np.linalg.norm(b)) 
+            if denom ==0:
+                return 1.0
+            return 1.0 - float(np.dot(a,b)/denom)
         else:
             raise ValueError("Unknown metric")
 
