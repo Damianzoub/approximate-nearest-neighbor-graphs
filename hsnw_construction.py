@@ -133,14 +133,15 @@ class HNSW_NEW:
             for nb in self.layers[layer].get(c_id,set()):
                 if nb in visited:
                     continue
-                visited.add(nb)
                 d = self.dist(vec,self.vectors[nb])
                 if len(W) < ef:
+                    visited.add(nb)
                     heapq.heappush(C,(d,nb))
                     heapq.heappush(W,(-d,nb))
                 else:
                     worst_dist = -W[0][0]
                     if d < worst_dist:
+                        visited.add(nb)
                         heapq.heappush(C,(d,nb))
                         heapq.heapreplace(W,(-d,nb))
         result = [(-neg_d,node_id) for (neg_d,node_id) in W]
