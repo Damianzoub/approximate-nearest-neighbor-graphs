@@ -1,50 +1,60 @@
-#include "vec_io.h"
+#include <iostream>
+#include <vector>
+#include <fstream>
+#include <stdexcept>
+#include <string>
 
-namespace vecio{
-    std::vector<std::vector<float>> read_fvecs(const std::string& filename){
-        std::ifstream input(filename,std::ios::binary);
-        if (!input){
-            throw std::runtime_error("Cannot open fvces files");
-        }
+std::vector<std::vector<int>> read_ivecs(const std::string& fname) {
+    std::ifstream file(fname, std::ios::binary);
+    if (!file)
+        throw std::runtime_error("ivecs file not found: " + fname);
 
-        std::vector<std::vector<float>> vectors;
+    // Read first dimension
+    int d;
+    file.read(reinterpret_cast<char*>(&d), sizeof(int));
+    if (!file)
+        throw std::runtime_error("ivecs file is empty or corrupted: " + fname);
 
-        while(true){
-            int32_t dim;
-            if(!input.read(reinterpret_cast<char*>(&dim),sizeof(int32_t))){
-                break; // End of file
-            }
+    // Move back to beginning
+    file.seekg(0, std::ios::beg);
 
-            std::vector<float> vec(dim);
-            input.read(reinterpret_cast<char*>(vec.data()),dim*sizeof(float));
-            if (!input){
-                throw std::runtime_error("Corrupted fvecs files");
-            }
+    std::vector<std::vector<int>> vectors;
 
-            vectors.push_back(std::move(vec));
+    while (true) {
+        int dim;
+        file.read(reinterpret_cast<char*>(&dim), sizeof(int));
+        if (!file) break;
 
-        }
-        return vectors;
+        std::vector<int> vec(dim);
+        file.read(reinterpret_cast<char*>(vec.data()), dim * sizeof(int));
+        if (!file)
+            throw std::runtime_error("Error reading ivecs data from: " + fname);
+
+        vectors.push_back(std::move(vec));
     }
 
-    std::vector<std::vector<int>> read_ivecs(const std::string& filename){
-        std::ifstream input(filename,std::ios::binary);
-        if (!input){
-            throw std::runtime_error("Cannot open ivecs files");
-        }
-        std::vector<std::vector<int>> vectors;
+    return vectors;
+}
 
-        while (true){
-            int32_t dim;
-            if (!input.read(reinterpret_cast<char*>(&dim),sizeof(int32_t))){break;}
+std::vector<std::vector<float>> read_fvecs(const std::string& fname) {
+    std::ifstream file(fname, std::ios::binary);
+    if (!file)
+        throw std::runtime_error("fvecs file not found: " + fname);
 
-            std::vector<int> vec(dim);
-            input.read(reinterpret_cast<char*>(vec.data()),dim*sizeof(int));
-            if (!input){
-                throw std::runtime_error("Corrupted ivecs files");
-            }
-            vectors.push_back(std::move(vec));
-        }
-        return vectors;
+    std::vector<std::vector<float>> vectors;
+
+    while (true) {
+        int dim;
+        file.read(reinterpret_cast<char*>(&dim), sizeof(int));
+        if (!file) break;
+
+        std::vector<float> vec(dim);
+        file.read(reinterpret_cast<char*>(vec.data()), dim * sizeof(float));
+        if (!file)
+            throw std::runtime_error("Error reading fvecs data from: " + fname);
+
+        vectors.push_back(std::move(vec));
     }
+
+    return vectors;
 }
