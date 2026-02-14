@@ -3,11 +3,8 @@ import heapq
 import math
 from dataclasses import dataclass
 from typing import List, Tuple, Optional
+import lightgbm as lgb
 
-
-# ----------------------------
-# DARTH minimal definitions
-# ----------------------------
 
 @dataclass
 class DarthParams:
@@ -17,17 +14,25 @@ class DarthParams:
     ipi: int
     mpi: int
 
-
 class RecallPredictor:
-    """Interface-like base class."""
+    
     def predict_one(self, features11: np.ndarray) -> float:
         raise NotImplementedError
 
 
+
+class InMemoryLGBMPredictor(RecallPredictor):
+    def __init__(self,booster):
+        self.booster = booster
+
+    def predict_one(self,features11:np.ndarray)->float:
+        x = np.asarray(features11, dtype=np.float32).reshape(1, -1)
+        rp = float(self.booster.predict(x)[0])
+        return float(np.clip(rp,0.0,1.0))
+    
+
 class DummyPredictor(RecallPredictor):
-    """
-    Simple dummy predictor so you can test DARTH integration.
-    """
+    
     def predict_one(self, features11: np.ndarray) -> float:
         ndis = float(features11[1])
         rp = 1.0 - np.exp(-ndis / 200.0)
