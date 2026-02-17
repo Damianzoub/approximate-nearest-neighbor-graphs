@@ -22,10 +22,10 @@ class HNSW_NEW {
         int entry_point() const {return entry_id_;}
         int size() const {return static_cast<int>(vectors_.size());}
         void set_use_heuristic(bool v) {use_heuristic_ = v;}
-        bool use_heuristic() const {return use_heuristic;}
+        bool use_heuristic() const {return use_heuristic_;}
         std::vector<int> query_darth(const std::vector<float>& q, const DarthParams& params, const IRecallPredictor& predictor) const;
         void search_darth(const std::vector<std::vector<float>>& Xq, const DarthParams& params,const IRecallPredictor& predictor, std::vector<std::vector<float>>& D, std::vector<std::vector<int>>& I) const;
-
+        
     private:
         int dim_;
         int M_;

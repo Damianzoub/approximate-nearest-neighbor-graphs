@@ -47,6 +47,8 @@ class HNSW_NEW:
         if self.entry_id is None:
             for _ in range(l+1):
                 self.layers.append({})
+            for lc in range(l+1):
+                self.layers[lc][node_id] = set()
             self.entry_id = node_id 
             self.maxlevel = l
             return node_id 
