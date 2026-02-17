@@ -86,7 +86,7 @@ if __name__ =="__main__":
     print("Running Benchmark...")
     df = run_benchMark(xb,xq,I_gt=I_gt,ks=ks,Ms=Ms,efCs=efCs,efSs=efSs)
     out_path = "benchmark_results.csv"
-    df.to_csv(out_path,index=False)
+    df.to_csv(out_path,index=True)
     print(f"Benchmark Finished")
     print(f"Results saved to: {out_path}")
 

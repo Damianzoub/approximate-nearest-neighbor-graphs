@@ -1,7 +1,7 @@
 import hnswlib
 import faiss 
 import numpy as np 
-from hsnw_constructionDARTH import HNSW_NEW
+from hnsw_construction import HNSW_NEW
 from pathlib import Path 
 
 def build_hnsw_New(Xb,M=16,efC=200):
