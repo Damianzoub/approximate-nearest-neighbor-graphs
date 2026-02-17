@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 CSV_PATH = "benchmark_results.csv"
-OUT_DIR = "plots"
+OUT_DIR = "plots_cpp"
 os.makedirs(OUT_DIR, exist_ok=True)
 
 df = pd.read_csv(CSV_PATH)
