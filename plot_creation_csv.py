@@ -58,4 +58,22 @@ for (M, efC, k), g in groups:
     plt.savefig(os.path.join(OUT_DIR, f"qps_M{M}_efC{efC}_k{k}.png"), dpi=200)
     plt.close()
 
+        # ---- Plot 3: Recall vs QPS (trade-off plot) ----
+    plt.figure()
+    for method in methods_order:
+        gm = g[g["Method"] == method]
+        if gm.empty:
+            continue
+        plt.plot(gm["QPS"], gm["Recall@k"], marker="o", label=method)
+
+    plt.xlabel("QPS")
+    plt.ylabel("Recall@k")
+    plt.title(f"Recall@{k} vs QPS (M={M}, efC={efC})")
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(os.path.join(OUT_DIR, f"recall_vs_qps_M{M}_efC{efC}_k{k}.png"), dpi=200)
+    plt.close()
+
+
 print(f"Saved plots to: {OUT_DIR}/")
