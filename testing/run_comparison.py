@@ -63,10 +63,14 @@ def run_benchMark(Xb,Xq,I_gt,ks=(10,),Ms=(16,),efCs=(32,64,128,200,),efSs=(20,50
 
 if __name__ =="__main__":
     BASE_DIR = Path(__file__).parent.parent
-    DATASET_PATH = BASE_DIR/"Datasets/siftsmall"
-    XB_PATH = f"{DATASET_PATH}/siftsmall_base.fvecs"
-    XQ_PATH = f"{DATASET_PATH}/siftsmall_query.fvecs"
-    GT_PATH = f"{DATASET_PATH}/siftsmall_groundtruth.ivecs"
+    DATASET_PATH = BASE_DIR/"Datasets"
+    XB_PATH = f"{DATASET_PATH}/siftsmall/siftsmall_base.fvecs"
+    XQ_PATH = f"{DATASET_PATH}/siftsmall/siftsmall_query.fvecs"
+    GT_PATH = f"{DATASET_PATH}/siftsmall/siftsmall_groundtruth.ivecs"
+
+    #XB_PATH = f"{DATASET_PATH}/sifts/sift_base.fvecs"
+    #XQ_PATH = f"{DATASET_PATH}/sifts/sift_query.fvecs"
+    #GT_PATH = f"{DATASET_PATH}/sifts/sift_groundtruth.ivecs"
 
     print("Loading datasets...")
     xb = read_fvecs(XB_PATH)
@@ -76,7 +80,12 @@ if __name__ =="__main__":
     print(f"Base vectors: {xb.shape}")
     print(f"Query vectors: {xq.shape}")
     print(f"GT shape: {I_gt.shape}")
-
+   
+    #ks = (10,20)
+    #Ms = (8,16)
+    #efCs = (64,128)
+   # efSs = (50,100)
+    
     ks = (10,20)
     Ms = (8,16)
     efCs = (64,128)
@@ -85,7 +94,7 @@ if __name__ =="__main__":
     #Run benchmark
     print("Running Benchmark...")
     df = run_benchMark(xb,xq,I_gt=I_gt,ks=ks,Ms=Ms,efCs=efCs,efSs=efSs)
-    out_path = "benchmark_results.csv"
+    out_path = "benchmark_resultsNEW.csv"
     df.to_csv(out_path,index=True)
     print(f"Benchmark Finished")
     print(f"Results saved to: {out_path}")

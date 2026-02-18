@@ -2,8 +2,8 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 
-CSV_PATH = "benchmark_results.csv"
-OUT_DIR = "plots_cpp"
+CSV_PATH = "benchmark_resultsNEW.csv"
+OUT_DIR = "plots_cpp_updated"
 os.makedirs(OUT_DIR, exist_ok=True)
 
 df = pd.read_csv(CSV_PATH)
@@ -64,10 +64,10 @@ for (M, efC, k), g in groups:
         gm = g[g["Method"] == method]
         if gm.empty:
             continue
-        plt.plot(gm["QPS"], gm["Recall@k"], marker="o", label=method)
+        plt.plot(gm["Recall@k"],gm["QPS"], marker="o", label=method)
 
-    plt.xlabel("QPS")
-    plt.ylabel("Recall@k")
+    plt.xlabel("Recall@k")
+    plt.ylabel("QPS")
     plt.title(f"Recall@{k} vs QPS (M={M}, efC={efC})")
     plt.legend()
     plt.grid(True)
