@@ -8,6 +8,7 @@ import sys
 CPP = Path(__file__).parent.parent / 'hnsw_cpp' / 'src' / 'build'
 sys.path.append(str(CPP))
 import hnsw_cpp
+faiss.omp_set_num_threads(1)
 
 def build_hnsw_DARTH(Xb, M=16, efC=200, metric='l2'):
     Xb = np.asarray(Xb, dtype=np.float32, order='C')

@@ -2,8 +2,8 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 
-CSV_PATH = "benchmark_resultsNEW.csv"
-OUT_DIR = "plots_cpp_updated"
+CSV_PATH = "benchmark_results_faiss_1thread.csv"
+OUT_DIR = "plots_1_thread_updated"
 os.makedirs(OUT_DIR, exist_ok=True)
 
 df = pd.read_csv(CSV_PATH)
