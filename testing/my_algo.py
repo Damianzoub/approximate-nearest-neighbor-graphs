@@ -7,11 +7,11 @@ if __name__ == "__main__":
     # Paths
     # -------------------------------------------------
     BASE_DIR = Path(__file__).parent.parent
-    DATASET = BASE_DIR / "Datasets" / "sifts"
+    DATASET = BASE_DIR / "Datasets" / "siftsmall"
 
-    XB_PATH = DATASET / "sift_base.fvecs"
-    XQ_PATH = DATASET / "sift_query.fvecs"
-    GT_PATH = DATASET / "sift_groundtruth.ivecs"
+    XB_PATH = DATASET / "siftsmall_base.fvecs"
+    XQ_PATH = DATASET / "siftsmall_query.fvecs"
+    GT_PATH = DATASET / "siftsmall_groundtruth.ivecs"
 
     # -------------------------------------------------
     # Load data
@@ -35,9 +35,9 @@ if __name__ == "__main__":
     k = 10
 
     print("\nBuilding HNSW_NEW...")
-    idx = build_hnsw_New(Xb, M=M, efC=efC)
+    idx = build_hnsw_DARTH(Xb, M=M, efC=efC)
 
-    search_fn = hnsw_New_search_fn(idx, efS)
+    search_fn = hnsw_darth_search_fn(idx, efS)
 
     # -------------------------------------------------
     # Run search

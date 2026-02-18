@@ -1,7 +1,12 @@
 import numpy as np 
 import heapq
 import math
-class HNSW_NEW:
+
+class DummyPredictor:
+    def predict(self,feats:dict) -> float:
+        return 0.0
+
+class HNSW_DARTH:
 
     def __init__(self,dim,M,efConstruction,metric='l2',seed=42):
         self.dim = dim 
@@ -112,6 +117,45 @@ class HNSW_NEW:
                 break
         return best        
     #beam_search   
+    #beam_search   
+    def _search_layer(self,vec,ep_id:int,layer:int,ef:int):
+        if layer < 0 or layer >= len(self.layers) or len(self.layers[layer]) ==0:
+            return []
+        if ep_id not in self.vectors:
+            return []
+
+        visited = set()
+        C = []
+        W = []
+        dist_ep = self.dist(vec,self.vectors[ep_id])
+        visited.add(ep_id)
+        heapq.heappush(C,(dist_ep,ep_id))
+        heapq.heappush(W,(-dist_ep,ep_id)) #max-heap
+
+        while C:
+            dist_c, c_id = heapq.heappop(C)
+            worst_dist = -W[0][0]
+            if dist_c > worst_dist:
+                break
+                
+            for nb in self.layers[layer].get(c_id,set()):
+                if nb in visited:
+                    continue
+                d = self.dist(vec,self.vectors[nb])
+                if len(W) < ef:
+                    visited.add(nb)
+                    heapq.heappush(C,(d,nb))
+                    heapq.heappush(W,(-d,nb))
+                else:
+                    worst_dist = -W[0][0]
+                    if d < worst_dist:
+                        visited.add(nb)
+                        heapq.heappush(C,(d,nb))
+                        heapq.heapreplace(W,(-d,nb))
+        result = [(-neg_d,node_id) for (neg_d,node_id) in W]
+        result.sort(key=lambda x: x[0])
+        return [node_id for (dist,node_id) in result]
+
     #darth paper based
     def _search_layer_darth(self,vec,ep_id,layer,efSearch,Rt,predictor,ipi,mpi):
         visited = set()
@@ -123,7 +167,7 @@ class HNSW_NEW:
         firstNN = dist_ep 
         visited.add(ep_id)
         heapq.heappush(C,(dist_ep,ep_id))
-        heapq.heappush(-W,(dist_ep,ep_id))
+        heapq.heappush(W,(-dist_ep,ep_id))
         #counters
         ndis = idis = nstep = 0
         pi = int(ipi)
@@ -249,20 +293,23 @@ class HNSW_NEW:
                 R.append((d_e,e))
         return [e for (d_e,e) in R]
     #search
-    def _query_darth(self,q_vec,K,numSearch): #algorithms 5 k-nn search
+    def _query_darth(self, q_vec, K: int, efSearch: int, Rt: float, predictor, ipi: int, mpi: int):
         if self.entry_id is None:
             return []
+
         ep = self.entry_id
-        L = self.maxlevel
-        #greedy in the above layers
-        for lc in range(L,0,-1):
-            ep = self._search_layer_greedy(q_vec,ep,lc,ef=1)
-        
+
+        # greedy on upper layers
+        for lc in range(self.maxlevel, 0, -1):
+            ep = self._search_layer_greedy(q_vec, ep, lc, ef=1)
+
+        # DARTH at base layer
         W = self._search_layer_darth(
             q_vec, ep_id=ep, layer=0, efSearch=efSearch,
             Rt=Rt, predictor=predictor, ipi=ipi, mpi=mpi
         )
         return W[:K]
+
 
     #probability of levels
     # mL=l = 1/ln(M)
@@ -277,7 +324,7 @@ class HNSW_NEW:
         D = np.empty((Xq.shape[0],k),dtype=np.float32)
 
         for i , q in enumerate(Xq):
-            ids = self._query(q,K=k,numSearch=efSearch)
+            ids = self._query_darth(q,K=k,numSearch=efSearch)
             #fill output
             I[i,:len(ids)] = ids
             if len(ids) < k:
@@ -291,6 +338,33 @@ class HNSW_NEW:
                 else:
                     D[i,j] = self.dist(q,self.vectors[int(idx)])
         return D,I
+
+    def search_darth(self, Xq: np.ndarray, k: int, efSearch: int, Rt=0.95, ipi=200, mpi=20, predictor=None):
+        Xq = np.asarray(Xq, dtype=np.float32)
+        I = np.empty((Xq.shape[0], k), dtype=np.int32)
+        D = np.empty((Xq.shape[0], k), dtype=np.float32)
+
+        if predictor is None:
+            predictor = DummyPredictor()
+
+        for i, q in enumerate(Xq):
+            ids = self._query_darth(
+                q_vec=q, K=int(k), efSearch=int(efSearch),
+                Rt=float(Rt), predictor=predictor, ipi=int(ipi), mpi=int(mpi)
+            )
+
+            I[i, :len(ids)] = ids
+            if len(ids) < k:
+                I[i, len(ids):] = -1
+
+            for j in range(k):
+                idx = I[i, j]
+                if idx == -1:
+                    D[i, j] = np.inf
+                else:
+                    D[i, j] = self.dist(q, self.vectors[int(idx)])
+
+        return D, I
 
 
     #calculate dist 
