@@ -4,7 +4,7 @@ import numpy as np
 from hnsw_construction import HNSW_NEW
 from pathlib import Path 
 import sys
-CPP = Path(__file__).parent.parent / 'hnsw_cpp' / 'src' / 'build' 
+CPP = Path(__file__).parent.parent / 'hnsw_cpp' / 'src' / 'build'
 sys.path.append(str(CPP))
 import hnsw_cpp
 

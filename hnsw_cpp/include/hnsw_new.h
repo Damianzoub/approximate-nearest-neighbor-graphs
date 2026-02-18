@@ -1,6 +1,5 @@
 #pragma once 
 
-#include "HNSWDarth.h"
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
@@ -8,7 +7,7 @@
 #include <cstdint>
 #include <limits>
 #include <string>
-
+#include <cmath>
 class HNSW_NEW {
     public: 
         enum class Metric {L2,Cosine};
@@ -20,11 +19,10 @@ class HNSW_NEW {
 
         int max_level() const {return maxlevel_;}
         int entry_point() const {return entry_id_;}
-        int size() const {return static_cast<int>(vectors_.size());}
+        int size() const { return static_cast<int>(slot_to_id_.size()); }
         void set_use_heuristic(bool v) {use_heuristic_ = v;}
         bool use_heuristic() const {return use_heuristic_;}
-        std::vector<int> query_darth(const std::vector<float>& q, const DarthParams& params, const IRecallPredictor& predictor) const;
-        void search_darth(const std::vector<std::vector<float>>& Xq, const DarthParams& params,const IRecallPredictor& predictor, std::vector<std::vector<float>>& D, std::vector<std::vector<int>>& I) const;
+        
         
     private:
         int dim_;
@@ -33,7 +31,25 @@ class HNSW_NEW {
         int efConstruction_;
         Metric metric_;
 
-        std::vector<std::unordered_map<int, std::unordered_set<int>>> layers_;
+        //fast continuous vector storage--
+        std::vector<float> data_;
+        std::vector<float> inv_norms_;
+        std::unordered_map<int, int> id_to_slot_; // node_id -> (offset, length)
+        std::vector<int> slot_to_id_; // slot index -> node_id
+        
+        //fast visted bookkeping
+        mutable std::vector<uint32_t> visited_tag_;
+        mutable uint32_t cur_tag_=1;
+
+        //buffers
+        struct SearchScratch{
+            std::vector<std::pair<float,int>> C; //min-heap
+            std::vector<std::pair<float,int>> W;  // max-heap
+            std::vector<std::pair<float,int>> tmp; //for final sort
+        };
+        mutable SearchScratch scratch_;
+
+        std::vector<std::unordered_map<int, std::vector<int>>> layers_;
         std::unordered_map<int, std::vector<float>> vectors_;
         int maxlevel_;
         int entry_id_;
@@ -45,8 +61,97 @@ class HNSW_NEW {
 
         void ensure_layers(int new_maxlevel);
         int sample_level() const;
-        float dist(const std::vector<float>& a , const std::vector<float>& b) const;
 
+        // pointer helpers + distance helpers
+        inline const float* vec_ptr_slot(int slot) const{
+            return data_.data() + (size_t)slot *(size_t)dim_;
+        }
+        inline void begin_search_tag() const {
+            ++cur_tag_;
+            if (cur_tag_ == 0){ //overflow
+                std::fill(visited_tag_.begin(), visited_tag_.end(), 0);
+                cur_tag_ = 1;
+            }
+        }
+        inline bool is_visited(int slot) const {return visited_tag_[slot] == cur_tag_;}
+        inline void mark_visited(int slot) const {visited_tag_[slot] = cur_tag_;}
+
+        // ---------- fast kernels (hot path) ----------
+        static inline float l2_unrolled4(const float* __restrict a,
+                                        const float* __restrict b,
+                                        int dim) {
+            float s0=0.f, s1=0.f, s2=0.f, s3=0.f;
+            int i = 0;
+            int limit = dim - (dim % 4);
+
+            for (; i < limit; i += 4) {
+                float d0 = a[i]   - b[i];
+                float d1 = a[i+1] - b[i+1];
+                float d2 = a[i+2] - b[i+2];
+                float d3 = a[i+3] - b[i+3];
+                s0 += d0*d0; s1 += d1*d1; s2 += d2*d2; s3 += d3*d3;
+            }
+            float dist = s0 + s1 + s2 + s3;
+            for (; i < dim; ++i) {
+                float d = a[i] - b[i];
+                dist += d*d;
+            }
+            return dist;
+        }
+
+        static inline float dot_unrolled4(const float* __restrict a,
+                                        const float* __restrict b,
+                                        int dim) {
+            float s0=0.f, s1=0.f, s2=0.f, s3=0.f;
+            int i = 0;
+            int limit = dim - (dim % 4);
+
+            for (; i < limit; i += 4) {
+                s0 += a[i]   * b[i];
+                s1 += a[i+1] * b[i+1];
+                s2 += a[i+2] * b[i+2];
+                s3 += a[i+3] * b[i+3];
+            }
+            float dot = s0 + s1 + s2 + s3;
+            for (; i < dim; ++i) dot += a[i] * b[i];
+            return dot;
+        }
+
+        static inline float inv_norm_ptr(const float* __restrict a, int dim) {
+            // 1/||a|| with epsilon to avoid divide-by-zero
+            float ss = dot_unrolled4(a, a, dim);
+            float n = std::sqrt(ss);
+            const float eps = 1e-12f;
+            return 1.0f / (n + eps);
+        }
+
+
+        // Optimized distance between query pointer q and slot vector
+        inline float dist_ptr(const float* __restrict q, int slot, float q_inv_norm = 1.0f) const {
+            const float* __restrict v = vec_ptr_slot(slot);
+
+            if (metric_ == Metric::L2) {
+                return l2_unrolled4(q, v, dim_);
+            } else {
+                // cosine distance = 1 - dot(q,v) * inv||q|| * inv||v||
+                // inv_norms_[slot] is precomputed at insert time
+                float dot = dot_unrolled4(q, v, dim_);
+                float sim = dot * q_inv_norm * inv_norms_[slot];
+                return 1.0f - sim;
+            }
+        }
+
+
+        inline float dist_slots(int a_slot, int b_slot) const {
+            const float* __restrict a = vec_ptr_slot(a_slot);
+            if (metric_ == Metric::L2) {
+                return l2_unrolled4(a, vec_ptr_slot(b_slot), dim_);
+            } else {
+                float dot = dot_unrolled4(a, vec_ptr_slot(b_slot), dim_);
+                float sim = dot * inv_norms_[a_slot] * inv_norms_[b_slot];
+                return 1.0f - sim;
+            }
+        }
         int search_layer_greedy(const std::vector<float>& q,int ep, int layer) const;
 
         std::vector<int> search_layer_beam(const std::vector<float>& q, int ep, int layer, int ef ) const;
@@ -55,11 +160,6 @@ class HNSW_NEW {
 
         std::vector<int> select_neighbors_heuristic_paper(const std::vector<float>& q, const std::vector<int>& candidates, int layer, int Mmax, bool extendCandidates, bool keepPruned) const;
 
-        std::unordered_set<int> prune_connection(int node_id,int layer, int Mmax);
-        void check_dim(const std::vector<float>& v) const;
-
-        mutable std::vector<int> darth_neigh_buf_;
-        mutable int darth_neigh_owner_ = std::numeric_limits<int>::min();
-        static const std::vector<int>& darth_neigh_cb(int node_id,void* ctx);
-        static float darth_dist_cb(const float* q, int node_id , void* ctx);
+        std::vector<int> prune_connection(int node_id, int layer, int Mmax);
+        void check_dim(const std::vector<float>& v) const;        
 };

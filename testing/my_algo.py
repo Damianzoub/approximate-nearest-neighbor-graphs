@@ -7,16 +7,16 @@ if __name__ == "__main__":
     # Paths
     # -------------------------------------------------
     BASE_DIR = Path(__file__).parent.parent
-    DATASET = BASE_DIR / "Datasets" / "siftsmall"
+    DATASET = BASE_DIR / "Datasets" / "sifts"
 
-    XB_PATH = DATASET / "siftsmall_base.fvecs"
-    XQ_PATH = DATASET / "siftsmall_query.fvecs"
-    GT_PATH = DATASET / "siftsmall_groundtruth.ivecs"
+    XB_PATH = DATASET / "sift_base.fvecs"
+    XQ_PATH = DATASET / "sift_query.fvecs"
+    GT_PATH = DATASET / "sift_groundtruth.ivecs"
 
     # -------------------------------------------------
     # Load data
     # -------------------------------------------------
-    print("Loading siftsmall...")
+    print("Loading sift...")
     Xb = read_fvecs(str(XB_PATH))
     Xq = read_fvecs(str(XQ_PATH))
     I_gt = read_ivecs(str(GT_PATH))
@@ -30,8 +30,8 @@ if __name__ == "__main__":
     # Build HNSW_NEW
     # -------------------------------------------------
     M = 16
-    efC = 100
-    efS = 50
+    efC = 100   
+    efS = 40
     k = 10
 
     print("\nBuilding HNSW_NEW...")
