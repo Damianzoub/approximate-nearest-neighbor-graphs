@@ -37,35 +37,37 @@ class HNSW_DARTH{
         //build
         int insert(const std::vector<float>& vec, int node_id=-1);
 
-        //query
+        // -----------------------------
+        // Query APIs
+        // -----------------------------
+        // Classic HNSW query (no DARTH). Returns top-k internal ids.
+        std::vector<int> query(const std::vector<float>& q, int k, int efSearch) const;
+
+        // DARTH query (early termination on layer 0). Returns top-k internal ids.
         std::vector<int> query_darth(const std::vector<float>& q,int k ,int efSearch, float Rt, const IPredictor& predictor, int ipi =200,int mpi=20) const;
+
+        // -----------------------------
+        // Batch search (exposed for Python bindings)
+        // -----------------------------
+        void search(const std::vector<std::vector<float>>& Xq,
+                    int k,
+                    int efSearch,
+                    std::vector<std::vector<float>>& D,
+                    std::vector<std::vector<int>>& I) const;
+
+        void search_darth(const std::vector<std::vector<float>>& Xq,
+                          int k,
+                          int efSearch,
+                          float Rt,
+                          const IPredictor& predictor,
+                          int ipi,
+                          int mpi,
+                          std::vector<std::vector<float>>& D,
+                          std::vector<std::vector<int>>& I) const;
 
         //basic info 
         int max_level() const {return maxlevel_;}
         int entry_point() const {return entry_id_;}
-    private:
-        using Adj = std::vector<int>;
-        using Layer = std::unordered_map<int,Adj>;
-        std::vector<Layer> layers_;
-
-        //vector store
-        std::unordered_map<int,std::vector<float>> vectors_;
-        
-        int dim_;
-        int M_;
-        int M0_;
-        int efConstruction_;
-        Metric metric_;
-        int maxlevel_;
-        int entry_id_;
-
-        //level sampling
-        double mL_;
-        mutable std::mt19937_64 rng_;
-        mutable std::uniform_real_distribution<double> unif_;
-
-        bool use_heuristic_ =true;
-    
     private:
         //distance
         float dist(const std::vector<float>& a , const std::vector<float>& b) const;
@@ -85,4 +87,32 @@ class HNSW_DARTH{
         std::vector<int> search_layer_darth(const std::vector<float>& q,int ep_id,int lc,int efSearch,int k,float Rt, const IPredictor& predictor, int ipi,int mpi) const;
 
         static DarthFeatures darth_extract_features(const std::vector<std::pair<float,int>>& result_maxheap,int ndis,int nstep,float firstNN,int ninserts);
+
+    private:
+        int dim_;
+        int M_;
+        int M0_;
+        int efConstruction_;
+        Metric metric_;
+
+        // graph storage: [level][node_id] -> neighbors
+        std::vector<std::unordered_map<int,std::vector<int>>> layers_;
+
+        // vectors_[id] is the stored point
+        std::unordered_map<int, std::vector<float>> vectors_;
+
+        int maxlevel_=-1;
+        int entry_id_=-1;
+
+        //level sampling
+        double mL_;
+        mutable std::mt19937_64 rng_;
+        mutable std::uniform_real_distribution<double> unif_;
+
+        bool use_heuristic_ =true;
+
+    private:
+        void check_dim(const std::vector<float>& v) const {
+            if ((int)v.size() != dim_) throw std::runtime_error("dim mismatch");
+        }
 };

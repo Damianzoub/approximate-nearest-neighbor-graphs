@@ -1,57 +1,219 @@
 #include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#include <pybind11/numpy.h>
+
+#include <string>
+#include <vector>
+#include <stdexcept>
+#include <limits>
+
 #include "hnswDarth.h"
 
 namespace py = pybind11;
 
-class PyPredictor : public HNSW_DARTH::IPredictor {
-    public:
-        using HNSW_DARTH::IPredictor::IPredictor; // inherit constructors
+static HNSW_DARTH::Metric parse_metric(const std::string& metric) {
+    if (metric == "l2") return HNSW_DARTH::Metric::L2;
+    if (metric == "cosine") return HNSW_DARTH::Metric::Cosine;
+    throw std::runtime_error("Unknown metric: " + metric);
+}
 
-        float predict(const HNSW_DARTH::DarthFeatures& f) const override{
-            PYBIND11_OVERRIDE_PURE(
-                float,          // Return type
-                HNSW_DARTH::IPredictor, // Parent class
-                predict,        // Name of function in C++ (must match Python name)
-                f               // Argument(s)
-            );
-        }
+struct ZeroPredictor final : public HNSW_DARTH::IPredictor {
+    float predict(const HNSW_DARTH::DarthFeatures&) const override { return 0.0f; }
 };
 
-PYBIND11_MODULE(hnsw_darth_cpp,m){
-    m.doc() = "HNSW_DARTH C++ implementation with DARTH predictor interface";
+struct PyPredictor final : public HNSW_DARTH::IPredictor {
+    explicit PyPredictor(py::object fn) : fn_(std::move(fn)) {}
 
-    py::enum_<HNSW_DARTH::Metric>(m,"Metric")
-    .value("L2", HNSW_DARTH::Metric::L2)
-    .value("Cosine", HNSW_DARTH::Metric::Cosine)
-    .export_values();
+    float predict(const HNSW_DARTH::DarthFeatures& f) const override {
+        py::gil_scoped_acquire gil;
 
-    py::class_<HNSW_DARTH::DarthFeatures>(m, "DarthFeatures")
-        .def(py::init<>())
-        .def_readwrite("ndis", &HNSW_DARTH::DarthFeatures::ndis)
-        .def_readwrite("nstep", &HNSW_DARTH::DarthFeatures::nstep)
-        .def_readwrite("ninserts", &HNSW_DARTH::DarthFeatures::ninserts)
-        .def_readwrite("firstNN", &HNSW_DARTH::DarthFeatures::firstNN)
-        .def_readwrite("closestNN", &HNSW_DARTH::DarthFeatures::closestNN)
-        .def_readwrite("furthestNN", &HNSW_DARTH::DarthFeatures::furthestNN)
-        .def_readwrite("meanNN", &HNSW_DARTH::DarthFeatures::meanNN)
-        .def_readwrite("varNN", &HNSW_DARTH::DarthFeatures::varNN)
-        .def_readwrite("p25NN", &HNSW_DARTH::DarthFeatures::p25NN)
-        .def_readwrite("p50NN", &HNSW_DARTH::DarthFeatures::p50NN)
-        .def_readwrite("p75NN", &HNSW_DARTH::DarthFeatures::p75NN);
+        py::dict d;
+        d["ndis"] = f.ndis;
+        d["nstep"] = f.nstep;
+        d["ninserts"] = f.ninserts;
+        d["firstNN"] = f.firstNN;
+        d["closestNN"] = f.closestNN;
+        d["furthestNN"] = f.furthestNN;
+        d["meanNN"] = f.meanNN;
+        d["varNN"] = f.varNN;
+        d["p25NN"] = f.p25NN;
+        d["p50NN"] = f.p50NN;
+        d["p75NN"] = f.p75NN;
 
-    py::class_<HNSW_DARTH::IPredictor, PyPredictor>(m, "Predictor")
-    .def(py::init<>())
-    .def("predict", &HNSW_DARTH::IPredictor::predict);
+        py::object out = fn_(d);
+        return out.cast<float>();
+    }
 
-    py::class_<HNSW_DARTH>(m, "HNSW_DARTH")
-    .def(py::init<int,int,int,HNSW_DARTH::Metric,uint64_t>(),
-    py::arg("dim"), py::arg("M"), py::arg("efConstruction"), py::arg("metric")=HNSW_DARTH::Metric::L2, py::arg("seed")=42)
+private:
+    py::object fn_;
+};
 
-    .def ("insert", &HNSW_DARTH::insert, py::arg("vec"), py::arg("node_id")=-1,"Insert a vector with optional node_id (auto-assigned if -1)")
-    .def("query_darth", &HNSW_DARTH::query_darth, py::arg("q"), py::arg("k"), py::arg("efSearch"), py::arg("Rt"), py::arg("predictor"), py::arg("ipi")=200, py::arg("mpi")=20,
-         "Query with DARTH: q=vector, k=num neighbors, efSearch=beam width, Rt=latency threshold, predictor=Predictor instance, ipi=initial pi, mpi=min pi")
-    .def("max_level", &HNSW_DARTH::max_level, "Get maximum level of the graph")
-    .def("entry_point", &HNSW_DARTH::entry_point, "Get entry point node id");
+class HNSWDarthIndex {
+public:
+    HNSWDarthIndex(int dim, int M, int efConstruction, const std::string& metric)
+        : dim_(dim),
+          index_(dim, M, efConstruction, parse_metric(metric)) {}
 
+    void add(py::array_t<float, py::array::c_style | py::array::forcecast> xb) {
+        auto b = xb.request();
+        if (b.ndim != 2) throw std::runtime_error("xb must be 2D");
+        const int64_t nb  = (int64_t)b.shape[0];
+        const int64_t dim = (int64_t)b.shape[1];
+        if ((int)dim != dim_) throw std::runtime_error("dim mismatch");
+
+        const float* ptr = static_cast<const float*>(b.ptr);
+
+        py::gil_scoped_release release;
+        std::vector<float> v(dim_);
+
+        for (int64_t i = 0; i < nb; ++i) {
+            const float* row = ptr + i * dim_;
+            for (int d = 0; d < dim_; ++d) v[d] = row[d];
+            index_.insert(v);
+        }
+    }
+
+    std::pair<py::array_t<float>, py::array_t<int>> search(
+        py::array_t<float, py::array::c_style | py::array::forcecast> xq,
+        int k,
+        int efSearch
+    ) {
+        auto qbuf = xq.request();
+        if (qbuf.ndim != 2) throw std::runtime_error("xq must be 2D");
+        const int64_t nq  = (int64_t)qbuf.shape[0];
+        const int64_t dim = (int64_t)qbuf.shape[1];
+        if ((int)dim != dim_) throw std::runtime_error("dim mismatch");
+
+        const float* qptr = static_cast<const float*>(qbuf.ptr);
+
+        std::vector<std::vector<float>> Xqv(nq, std::vector<float>(dim_));
+        for (int64_t i = 0; i < nq; ++i) {
+            const float* row = qptr + i * dim_;
+            for (int d = 0; d < dim_; ++d) Xqv[i][d] = row[d];
+        }
+
+        std::vector<std::vector<float>> Dv;
+        std::vector<std::vector<int>>   Iv;
+
+        {
+            py::gil_scoped_release release;
+            index_.search(Xqv, k, efSearch, Dv, Iv);
+        }
+
+        py::array_t<int>   I({nq, (int64_t)k});
+        py::array_t<float> D({nq, (int64_t)k});
+        auto Iw = I.mutable_unchecked<2>();
+        auto Dw = D.mutable_unchecked<2>();
+
+        for (int64_t i = 0; i < nq; ++i) {
+            for (int j = 0; j < k; ++j) {
+                Iw(i, j) = (j < (int)Iv[i].size()) ? Iv[i][j] : -1;
+                Dw(i, j) = (j < (int)Dv[i].size())
+                         ? Dv[i][j]
+                         : std::numeric_limits<float>::infinity();
+            }
+        }
+
+        return {D, I};
+    }
+
+    std::pair<py::array_t<float>, py::array_t<int>> search_darth(
+        py::array_t<float, py::array::c_style | py::array::forcecast> xq,
+        int k,
+        int efSearch,
+        float Rt,
+        py::object predictor,
+        int ipi,
+        int mpi
+    ) {
+        auto qbuf = xq.request();
+        if (qbuf.ndim != 2) throw std::runtime_error("xq must be 2D");
+        const int64_t nq  = (int64_t)qbuf.shape[0];
+        const int64_t dim = (int64_t)qbuf.shape[1];
+        if ((int)dim != dim_) throw std::runtime_error("dim mismatch");
+
+        const float* qptr = static_cast<const float*>(qbuf.ptr);
+
+        std::vector<std::vector<float>> Xqv(nq, std::vector<float>(dim_));
+        for (int64_t i = 0; i < nq; ++i) {
+            const float* row = qptr + i * dim_;
+            for (int d = 0; d < dim_; ++d) Xqv[i][d] = row[d];
+        }
+
+        std::vector<std::vector<float>> Dv;
+        std::vector<std::vector<int>>   Iv;
+
+        ZeroPredictor zero;
+        std::unique_ptr<PyPredictor> pyPred;
+
+        const HNSW_DARTH::IPredictor* predPtr = &zero;
+        if (!predictor.is_none()) {
+            pyPred = std::make_unique<PyPredictor>(predictor);
+            predPtr = pyPred.get();
+        }
+
+        {
+            py::gil_scoped_release release;
+            index_.search_darth(Xqv, k, efSearch, Rt, *predPtr, ipi, mpi, Dv, Iv);
+        }
+
+        py::array_t<int>   I({nq, (int64_t)k});
+        py::array_t<float> D({nq, (int64_t)k});
+        auto Iw = I.mutable_unchecked<2>();
+        auto Dw = D.mutable_unchecked<2>();
+
+        for (int64_t i = 0; i < nq; ++i) {
+            for (int j = 0; j < k; ++j) {
+                Iw(i, j) = (j < (int)Iv[i].size()) ? Iv[i][j] : -1;
+                Dw(i, j) = (j < (int)Dv[i].size())
+                         ? Dv[i][j]
+                         : std::numeric_limits<float>::infinity();
+            }
+        }
+
+        return {D, I};
+    }
+
+    // old names (compat)
+    std::pair<py::array_t<float>, py::array_t<int>> search_layer(
+        py::array_t<float, py::array::c_style | py::array::forcecast> xq,
+        int k,
+        int efSearch
+    ) { return search(xq, k, efSearch); }
+
+    std::pair<py::array_t<float>, py::array_t<int>> search_layer_darth(
+        py::array_t<float, py::array::c_style | py::array::forcecast> xq,
+        int k,
+        int efSearch,
+        float Rt,
+        py::object predictor,
+        int ipi,
+        int mpi
+    ) { return search_darth(xq, k, efSearch, Rt, predictor, ipi, mpi); }
+
+private:
+    int dim_;
+    HNSW_DARTH index_;
+};
+
+PYBIND11_MODULE(hnswDarth_cpp, m) {
+    py::class_<HNSWDarthIndex>(m, "HNSWDarthIndex")
+        .def(py::init<int,int,int,const std::string&>(),
+             py::arg("dim"), py::arg("M"), py::arg("efConstruction"), py::arg("metric")="l2")
+        .def("add", &HNSWDarthIndex::add, py::arg("xb"))
+        .def("search", &HNSWDarthIndex::search,
+             py::arg("xq"), py::arg("k"), py::arg("efSearch"))
+        .def("search_darth", &HNSWDarthIndex::search_darth,
+             py::arg("xq"), py::arg("k"), py::arg("efSearch"),
+             py::arg("Rt")=0.95f,
+             py::arg("predictor")=py::none(),
+             py::arg("ipi")=200,
+             py::arg("mpi")=20)
+        .def("search_layer", &HNSWDarthIndex::search_layer,
+             py::arg("xq"), py::arg("k"), py::arg("efSearch"))
+        .def("search_layer_darth", &HNSWDarthIndex::search_layer_darth,
+             py::arg("xq"), py::arg("k"), py::arg("efSearch"),
+             py::arg("Rt")=0.95f,
+             py::arg("predictor")=py::none(),
+             py::arg("ipi")=200,
+             py::arg("mpi")=20);
 }
