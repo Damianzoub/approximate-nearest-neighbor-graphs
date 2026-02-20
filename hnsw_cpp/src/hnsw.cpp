@@ -45,9 +45,16 @@ int HNSW_NEW::sample_level() const{
     return static_cast<int>(-std::log(U) * mL_);
 }
 // updating levels
+void HNSW_NEW::ensure_node_capacity(int slot,int upto_level){
+    for (int lc = 0; lc <= upto_level; ++lc){
+        auto &adj = layers_[lc];
+        if ((int)adj.size() <= slot) adj.resize(slot+1);
+    }
+}
+
 void HNSW_NEW::ensure_layers(int new_maxlevel){
-    if (new_maxlevel <0) return;
-    if (static_cast<int>(layers_.size()) <= new_maxlevel){
+    if (new_maxlevel < 0) return ;
+    if ((int)layers_.size() <= new_maxlevel){
         layers_.resize(new_maxlevel+1);
     }
 }
@@ -60,17 +67,15 @@ int HNSW_NEW::search_layer_greedy(const std::vector<float>& q, int ep, int layer
     if (metric_ == Metric::Cosine) q_inv_norm = inv_norm_ptr(qptr, dim_);
 
     float bestDist = dist_ptr(qptr, best, q_inv_norm);
-    
 
     while (true) {
         bool improved = false;
 
-        auto itNode = layers_[layer].find(best);
-        if (itNode == layers_[layer].end()) break;
+        if (best < 0 || best >= (int)level_.size() || level_[best] < layer) break;
+        const auto& neigh = layers_[layer][best];
 
-        const auto& neigh = itNode->second; // contains SLOTS
         for (int nb : neigh) {
-            float d = dist_ptr(qptr, nb,q_inv_norm);
+            float d = dist_ptr(qptr, nb, q_inv_norm);
             if (d < bestDist) {
                 bestDist = d;
                 best = nb;
@@ -86,7 +91,6 @@ int HNSW_NEW::search_layer_greedy(const std::vector<float>& q, int ep, int layer
 std::vector<int> HNSW_NEW::search_layer_beam(const std::vector<float>& q, int ep, int layer, int ef) const {
     using Item = std::pair<float,int>;
     if (layer < 0 || layer >= (int)layers_.size()) return {};
-    if (layers_[layer].empty()) return {};
     if (ep < 0) return {};
     if (ef <= 0) return {};
 
@@ -131,10 +135,10 @@ std::vector<int> HNSW_NEW::search_layer_beam(const std::vector<float>& q, int ep
         float worstDist = W.front().first; // max-heap: worst is at front
         if (dist_c > worstDist) break;
 
-        auto it = layers_[layer].find(c_id);
-        if (it == layers_[layer].end()) continue;
+        if (c_id < 0 || c_id >= (int)level_.size() || level_[c_id] < layer) continue;
+        const auto& neigh = layers_[layer][c_id];
 
-        for (int nb : it->second) {
+        for (int nb : neigh) {
             if (is_visited(nb)) continue;
             mark_visited(nb);
 
@@ -197,67 +201,65 @@ std::vector<int> HNSW_NEW::select_neighbors_simple(const std::vector<float>& q, 
     return out;
 }
 
-std::vector<int> HNSW_NEW::select_neighbors_heuristic_paper(
-    const std::vector<float>& q,
+std::vector<int> HNSW_NEW::select_neighbors_heuristic_paper_slot(
+    int qslot,
     const std::vector<int>& candidates,
     int layer, int Mmax,
     bool extendCandidates,
     bool keepPruned
 ) const {
     if (Mmax <= 0) return {};
+
     std::unordered_set<int> Wset;
-    Wset.reserve(candidates.size()*3+1);
+    Wset.reserve(candidates.size()*3 + 1);
     for (int id : candidates) Wset.insert(id);
-    
-    if (extendCandidates){
-        std::vector<int> base(Wset.begin(),Wset.end());
-        for (int e : base){
-            auto it = layers_[layer].find(e);
-            if (it ==layers_[layer].end()) continue;
-            for (int adj : it->second) Wset.insert(adj);
+
+    if (extendCandidates) {
+        std::vector<int> base(Wset.begin(), Wset.end());
+        for (int e : base) {
+            if (e < 0 || e >= (int)level_.size() || level_[e] < layer) continue;
+            for (int adj : layers_[layer][e]) Wset.insert(adj);
         }
     }
 
     std::vector<std::pair<float,int>> cand;
     cand.reserve(Wset.size());
-    const float* qptr = q.data();
-    float q_inv_norm = 1.0f;
-    if (metric_ == Metric::Cosine) q_inv_norm = inv_norm_ptr(qptr, dim_);
-
-    for (int e : Wset){
-        cand.push_back({dist_ptr(qptr, e, q_inv_norm), e});
+    for (int e : Wset) {
+        cand.push_back({dist_slots(qslot, e), e});
     }
+    std::sort(cand.begin(), cand.end(),
+              [](auto& a, auto& b){ return a.first < b.first; });
 
-    std::sort(cand.begin(),cand.end(), [](const auto& a, const auto& b){return a.first < b.first;});
     std::vector<int> R;
     R.reserve(Mmax);
 
     std::vector<std::pair<float,int>> discarded;
     discarded.reserve(cand.size());
-    
-    for (const auto& [d_qe,e] : cand){
+
+    for (auto& [d_qe, e] : cand) {
         bool good = true;
-        for (int r : R){
-            float d_er = dist_slots(e,r);
-            if (d_er < d_qe){
-                good = false;
-                break;
-            }
+        for (int r : R) {
+            float d_er = dist_slots(e, r);
+            if (d_er < d_qe) { good = false; break; }
         }
-        if (good){
+        if (good) {
             R.push_back(e);
-            if(static_cast<int>(R.size()) == Mmax) break;
-        }else{
-            discarded.push_back({d_qe,e});
+            if ((int)R.size() == Mmax) break;
+        } else {
+            discarded.push_back({d_qe, e});
         }
     }
-    if (keepPruned && static_cast<int>(R.size()) < Mmax){
-        std::sort(discarded.begin(),discarded.end(), [](const auto& a, const auto& b){return a.first < b.first;});
-        for (auto& p : discarded){
+
+    if (keepPruned && (int)R.size() < Mmax) {
+        std::sort(discarded.begin(), discarded.end(),
+                  [](auto& a, auto& b){ return a.first < b.first; });
+        for (auto& p : discarded) {
             int e = p.second;
-            if (std::find(R.begin(),R.end(),e) == R.end()){
+            bool exists = false;
+            for (int x : R) if (x == e) { exists = true; break; }
+            if (!exists) {
                 R.push_back(e);
-                if (static_cast<int>(R.size()) == Mmax) break;
+                if ((int)R.size() == Mmax) break;
             }
         }
     }
@@ -266,33 +268,29 @@ std::vector<int> HNSW_NEW::select_neighbors_heuristic_paper(
 
 
 std::vector<int> HNSW_NEW::prune_connection(int node_id, int layer, int Mmax) {
-    auto it = layers_[layer].find(node_id);
-    if (it == layers_[layer].end()) return {};
-
-    auto& neigh = it->second;              // now vector<int>
+    if (node_id < 0 || node_id >= (int)level_.size() || level_[node_id] < layer) return {};
+    auto& neigh = layers_[layer][node_id];
     if ((int)neigh.size() <= Mmax) return neigh;
 
-    // candidates list (copy)
     std::vector<int> neighbors = neigh;
-
-    // build q vector for selection funcs (keep your interface)
-    std::vector<float> qvec(dim_);
-    const float* qptr = vec_ptr_slot(node_id);
-    for (int i = 0; i < dim_; ++i) qvec[i] = qptr[i];
 
     std::vector<int> newList;
     if (use_heuristic_) {
-        newList = select_neighbors_heuristic_paper(qvec, neighbors, layer, Mmax, true, false);
+        newList = select_neighbors_heuristic_paper_slot(node_id, neighbors, layer, Mmax, true, false);
     } else {
-        newList = select_neighbors_simple(qvec, neighbors, layer, Mmax);
+        // you can also create a slot-based simple selector similarly, or keep your old one
+        // but old one needs q vector; better to write select_neighbors_simple_slot too.
+        newList = select_neighbors_heuristic_paper_slot(node_id, neighbors, layer, Mmax, false, true);
     }
 
-    // remove reverse edges for nodes that were dropped
+    std::unordered_set<int> keep;
+    keep.reserve(newList.size()*2 + 1);
+    for (int x : newList) keep.insert(x);
+
     for (int old_nb : neigh) {
-        if (std::find(newList.begin(), newList.end(), old_nb) == newList.end()) {
-            auto it2 = layers_[layer].find(old_nb);
-            if (it2 != layers_[layer].end()) {
-                erase_swap(it2->second, node_id); // <-- vector erase
+        if (!keep.count(old_nb)) {
+            if (old_nb >= 0 && old_nb < (int)level_.size() && level_[old_nb] >= layer) {
+                erase_swap(layers_[layer][old_nb], node_id);
             }
         }
     }
@@ -301,22 +299,25 @@ std::vector<int> HNSW_NEW::prune_connection(int node_id, int layer, int Mmax) {
     return neigh;
 }
 
-
-std::vector<int> HNSW_NEW::query(const std::vector<float>& q, int k,int efSearch) const {
-    check_dim(q);
-    if (entry_id_ <0) return {};
-    if (k<= 0) return {};
-    if (efSearch <=0) efSearch =1;
-    int ep = entry_id_;
-
-    for (int lc = maxlevel_; lc >0; --lc){
-        ep = search_layer_greedy(q,ep,lc);
-
-    }
-    std::vector<int> slots = search_layer_beam(q,ep,0,efSearch);
-    if ((int)slots.size() > k) slots.resize(k);
-    //convert slots -> external ids
+std::vector<int> HNSW_NEW::query(const std::vector<float>& q, int k, int efSearch) const {
+    auto slots = query_slots(q, k, efSearch);
     for (int& s : slots) s = slot_to_id_[s];
+    return slots;
+}
+
+std::vector<int> HNSW_NEW::query_slots(const std::vector<float>& q, int k, int efSearch) const {
+    check_dim(q);
+    if (entry_id_ < 0) return {};
+    if (k <= 0) return {};
+    if (efSearch <= 0) efSearch = 1;
+
+    int ep = entry_id_;
+    for (int lc = maxlevel_; lc > 0; --lc) {
+        ep = search_layer_greedy(q, ep, lc);
+    }
+
+    auto slots = search_layer_beam(q, ep, 0, efSearch);
+    if ((int)slots.size() > k) slots.resize(k);
     return slots;
 }
 
@@ -350,13 +351,17 @@ int HNSW_NEW::insert(const std::vector<float>& vec_in, int node_id) {
     }
 
     int l = sample_level();
-
+    level_.push_back(l);
+    ensure_layers(std::max(maxlevel_, l));
+    ensure_node_capacity(slot,l);
     // first node
     if (entry_id_ < 0) {
         ensure_layers(l);
+        ensure_node_capacity(slot,l);
         for (int lc = 0; lc <= l; ++lc) {
-            layers_[lc][slot] = std::vector<int>{};
-            layers_[lc][slot].reserve((size_t)((lc == 0 ? M0_ : M_) +1));
+            int Mmax = (lc == 0 ? M0_ : M_);
+            layers_[lc][slot].clear();
+            layers_[lc][slot].reserve((size_t)Mmax+1);
         }
         entry_id_ = slot;
         maxlevel_ = l;
@@ -381,27 +386,31 @@ int HNSW_NEW::insert(const std::vector<float>& vec_in, int node_id) {
     for (int lc = std::min(L, l); lc >= 0; --lc) {
     int Mmax = (lc == 0 ? M0_ : M_);
 
-    layers_[lc].try_emplace(slot, std::vector<int>{});
     layers_[lc][slot].reserve((size_t)Mmax + 1);
-
+    
     std::vector<int> W = search_layer_beam(vec_in, ep, lc, efConstruction_);
 
     std::vector<int> neighbors;
     if (use_heuristic_) {
-        neighbors = select_neighbors_heuristic_paper(vec_in, W, lc, Mmax, true, false);
+        neighbors = select_neighbors_heuristic_paper_slot(slot, W, lc, Mmax, true, false);
     } else {
         neighbors = select_neighbors_simple(vec_in, W, lc, Mmax);
     }
-
+    auto& a = layers_[lc][slot];
     for (int nb : neighbors) {
-        layers_[lc].try_emplace(nb, std::vector<int>{});
-        layers_[lc][nb].reserve((size_t)Mmax + 1);
-
-        auto& a = layers_[lc][slot];
+        if (nb < 0 || nb >= (int)level_.size() || level_[nb] < lc) continue;
+        
         auto& b = layers_[lc][nb];
-
-        if (std::find(a.begin(), a.end(), nb) == a.end()) a.push_back(nb);
-        if (std::find(b.begin(), b.end(), slot) == b.end()) b.push_back(slot);
+        b.reserve((size_t)Mmax+1);
+        a.push_back(nb);
+        bool exists = false;
+        for (int x : b) {
+            if (x == slot) {
+                exists = true;
+                break;
+            }
+        }
+        if (!exists) b.push_back(slot);
 
         if ((int)b.size() > Mmax) {
             prune_connection(nb, lc, Mmax);
@@ -437,13 +446,11 @@ void HNSW_NEW::search(const std::vector<std::vector<float>>& Xq,
             q_inv_norm = inv_norm_ptr(qptr, dim_);
         }
 
-        auto ids = query(q, k, efSearch);
+        auto slots = query_slots(q, k, efSearch);
 
-        for (size_t j = 0; j < ids.size(); ++j) {
-            int id = ids[j];
-            int slot = id_to_slot_.at(id);
-
-            I[i][j] = id;
+        for (size_t j = 0; j < slots.size(); ++j) {
+            int slot = slots[j];
+            I[i][j] = slot_to_id_[slot];
             D[i][j] = dist_ptr(qptr, slot, q_inv_norm);  // <-- use cached q_inv_norm
         }
     }

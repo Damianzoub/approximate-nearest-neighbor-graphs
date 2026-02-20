@@ -6,7 +6,7 @@ from pathlib import Path
 from hsnw_constructionDARTH import HNSW_DARTH
 import sys
 CPP = Path(__file__).parent.parent / 'hnsw_cpp' / 'src' / 'build'
-sys.path.append(str(CPP))
+sys.path.insert(0, str(CPP))
 import hnsw_cpp
 faiss.omp_set_num_threads(1)
 
