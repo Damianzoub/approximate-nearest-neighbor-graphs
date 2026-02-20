@@ -5,10 +5,34 @@ from hnsw_construction import HNSW_NEW
 from pathlib import Path 
 from hsnw_constructionDARTH import HNSW_DARTH
 import sys
+
 CPP = Path(__file__).parent.parent / 'hnsw_cpp' / 'src' / 'build'
 sys.path.insert(0, str(CPP))
 import hnsw_cpp
+
+DarthCPP = Path(__file__).parent.parent/ "hnswDarth_cpp" / "src" / "build"
+sys.path.insert(0, str(DarthCPP))
+import hnswDarth_cpp
+
 faiss.omp_set_num_threads(1)
+
+def build_hnsw_DARTH_cpp(Xb,M=16,efC=200,metric='l2'):
+    Xb = np.asarray(Xb, dtype=np.float32, order='C')
+    idx = hnswDarth_cpp.HNSW_DARTH(dim=Xb.shape[1], M=int(M), efConstruction=int(efC), metric=str(metric))
+    idx.add(Xb)
+    return idx
+
+def hnsw_darth_cpp_search_fn(idx, efS, Rt=0.95, ipi=200, mpi=20, predictor=None):
+    efS = int(efS)
+    Rt = float(Rt)
+    ipi = int(ipi)
+    mpi = int(mpi)
+
+    def _search(Xq, k):
+        Xq = np.asarray(Xq, dtype=np.float32, order='C')
+        return idx.search_darth(Xq, k=int(k), efSearch=efS, Rt=Rt, ipi=ipi, mpi=mpi, predictor=predictor)
+    return _search
+
 
 def build_hnsw_DARTH(Xb, M=16, efC=200, metric='l2'):
     Xb = np.asarray(Xb, dtype=np.float32, order='C')
