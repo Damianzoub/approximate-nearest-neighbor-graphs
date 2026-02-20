@@ -49,8 +49,9 @@ class HNSW_NEW {
         };
         mutable SearchScratch scratch_;
 
-        std::vector<std::unordered_map<int, std::vector<int>>> layers_;
+        std::vector<std::vector<std::vector<int>>> layers_;
         std::unordered_map<int, std::vector<float>> vectors_;
+        std::vector<int> level_;
         int maxlevel_;
         int entry_id_;
         double mL_;
@@ -60,6 +61,7 @@ class HNSW_NEW {
         bool use_heuristic_;
 
         void ensure_layers(int new_maxlevel);
+        void ensure_node_capacity(int slot,int upto_level);
         int sample_level() const;
 
         // pointer helpers + distance helpers
@@ -158,8 +160,8 @@ class HNSW_NEW {
 
         std::vector<int> select_neighbors_simple(const std::vector<float>& q, const std::vector<int>& candidates, int layer, int Mmax) const;
 
-        std::vector<int> select_neighbors_heuristic_paper(const std::vector<float>& q, const std::vector<int>& candidates, int layer, int Mmax, bool extendCandidates, bool keepPruned) const;
-
+        std::vector<int> select_neighbors_heuristic_paper_slot(int qslot,const std::vector<int>& candidates, int layer, int Mmax,bool extendCandidates,bool keepPruned) const;
+        std::vector<int> query_slots(const std::vector<float>& q, int k, int efSearch) const;
         std::vector<int> prune_connection(int node_id, int layer, int Mmax);
         void check_dim(const std::vector<float>& v) const;        
 };

@@ -44,3 +44,14 @@ Contributions are welcome! Please open an issue or submit a pull request.
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+
+## Creating a Pybind
+run the following command inside the 
+```bash
+cd hnsw_cpp/src
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-O3 -DNDEBUG -march=native -ffast-math" ..
+cmake --build . -j
+```
