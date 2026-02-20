@@ -78,7 +78,7 @@ class HNSW_DARTH:
                 self.layers[lc][node_id] = set()
             #θα το σκεφτω μετα το current_entryPoint αν ειναι σωστο
             W = self._search_layer(vec,ep,lc,self.efConstruction)
-            neighbors = self.select_neighbors_heuristic(vec,W,lc,self.M if lc > 0 else self.M0)
+            neighbors = self._select_neighbors_heuristic_paper(vec,W,lc,self.M if lc > 0 else self.M0,extend_candidates=True,keep_pruned_connections=False)
 
             for nb in neighbors:
                 if nb not in self.layers[lc]:
@@ -157,62 +157,99 @@ class HNSW_DARTH:
         return [node_id for (dist,node_id) in result]
 
     #darth paper based
-    def _search_layer_darth(self,vec,ep_id,layer,efSearch,Rt,predictor,ipi,mpi):
+    
+    def _search_layer_darth(self, vec, ep_id, layer, efSearch, k, Rt, predictor, ipi, mpi):
+        if layer < 0 or layer >= len(self.layers) or len(self.layers[layer]) == 0:
+            return []
+        if ep_id not in self.vectors:
+            return []
+
         visited = set()
+
+        # candidateQueue: min-heap (dist, id)
         C = []
+        # resultSet: max-heap implemented as (-dist, id), size k
         W = []
 
-        #initialize
-        dist_ep = self.dist(vec,self.vectors[ep_id])
-        firstNN = dist_ep 
-        visited.add(ep_id)
-        heapq.heappush(C,(dist_ep,ep_id))
-        heapq.heappush(W,(-dist_ep,ep_id))
-        #counters
-        ndis = idis = nstep = 0
-        pi = int(ipi)
+        # Counters (paper semantics)
+        ndis = 0       # total distance computations
+        idis = 0       # distance computations since last prediction
+        nstep = 0      # number of expansions (pop from C)
+        inserts = 0    # updates to resultSet
 
-        #hnsw base-layer loop +darth early termination
+        # Initialization (distance to entry counts)
+        dist_ep = self.dist(vec, self.vectors[ep_id]); ndis += 1; idis += 1
+        firstNN = dist_ep
+
+        visited.add(ep_id)
+        heapq.heappush(C, (dist_ep, ep_id))
+        heapq.heappush(W, (-dist_ep, ep_id)); inserts += 1
+
+        # Prediction interval
+        pi = int(ipi)
+        if pi < int(mpi):
+            pi = int(mpi)
+
         while C:
             dist_c, c_id = heapq.heappop(C)
-            ndis +=1
-            idis +=1
-            nstep +=1
+            nstep += 1
 
-            worst_dist = -W[0][0] 
-            if dist_c > worst_dist:
+            # GetMaxDistance(resultSet)
+            maxDist = float("inf") if len(W) < k else (-W[0][0])
+
+            # Standard HNSW termination condition used in Algorithm 1
+            if dist_c > maxDist:
                 break
 
-            for nb in self.layers[layer].get(c_id,set()):
+            for nb in self.layers[layer].get(c_id, set()):
                 if nb in visited:
-                    continue 
+                    continue
                 visited.add(nb)
-                d = self.dist(vec,self.vectors[nb])
-                if len(W) < efSearch:
-                    heapq.heappush(C,(d,nb))
-                    heapq.heappush(W,(-d,nb))
+
+                # Distance(q, nb) counts as a distance computation
+                d = self.dist(vec, self.vectors[nb]); ndis += 1; idis += 1
+
+                # Update resultSet (size k)
+                if len(W) < k:
+                    heapq.heappush(W, (-d, nb)); inserts += 1
                 else:
-                    worst_dist = -W[0][0]
-                    if d < worst_dist:
-                        heapq.heappush(C,(d,nb))
-                        heapq.heappush(W,(-d,nb))
-            
-            # Darth early termination check
-            if idis >= pi:
-                feats = darth_extract_features(W_heap=W,ndis=ndis,nstep=nstep,firstNN=firstNN)
-                Rp = float(predictor.predict(feats))
+                    if d < -W[0][0]:
+                        heapq.heapreplace(W, (-d, nb)); inserts += 1
 
-                if Rp >= Rt:
-                    break
+                # Recompute maxDist after possible update
+                maxDist = float("inf") if len(W) < k else (-W[0][0])
 
-                # adaptive prediction interval 
-                pi = int(mpi+(ipi-mpi)* (Rt-Rp))
-                if pi < mpi:
-                    pi = int(mpi)
-                idis = 0
-        res = [(-neg_d,idx) for (neg_d,idx) in W]
+                # Update candidateQueue (paper condition)
+                if (d < maxDist) or (len(C) < efSearch):
+                    heapq.heappush(C, (d, nb))
+
+                # DARTH: prediction every pi distance computations
+                if idis % pi == 0:
+                    feats = darth_extract_features(
+                        W_heap=W,
+                        ndis=ndis,
+                        nstep=nstep,
+                        firstNN=firstNN,
+                        ninserts=inserts
+                    )
+                    Rp = float(predictor.predict(feats))
+
+                    # Early termination if predicted recall meets target
+                    if Rp >= Rt:
+                        break
+
+                    # Adaptive prediction interval
+                    pi = int(mpi + (ipi - mpi) * (Rt - Rp))
+                    if pi < int(mpi):
+                        pi = int(mpi)
+
+                    # Reset interval counter
+                    idis = 0
+
+        # Natural termination: return current top-k
+        res = [(-neg_d, idx) for (neg_d, idx) in W]
         res.sort(key=lambda x: x[0])
-        return [idx for (d,idx) in res]
+        return [idx for (_, idx) in res]
 
 
     #here we check about how many nodes are going to become neighbors from the select_layers candidates 
@@ -305,7 +342,7 @@ class HNSW_DARTH:
 
         # DARTH at base layer
         W = self._search_layer_darth(
-            q_vec, ep_id=ep, layer=0, efSearch=efSearch,
+            q_vec, ep_id=ep, layer=0, efSearch=efSearch,k=K,
             Rt=Rt, predictor=predictor, ipi=ipi, mpi=mpi
         )
         return W[:K]
@@ -318,26 +355,6 @@ class HNSW_DARTH:
         return int(-math.log(U)*l)
     
     #so i can compare the results with faiss and hnswlib
-    def search(self,Xq:np.ndarray,k:int , efSearch:int):
-        Xq = np.asarray(Xq,dtype=np.float32)
-        I = np.empty((Xq.shape[0],k),dtype=np.int32)
-        D = np.empty((Xq.shape[0],k),dtype=np.float32)
-
-        for i , q in enumerate(Xq):
-            ids = self._query_darth(q,K=k,numSearch=efSearch)
-            #fill output
-            I[i,:len(ids)] = ids
-            if len(ids) < k:
-                I[i,len(ids):] =-1
-            
-            #compute distances for returned ids
-            for j in range(k):
-                idx = I[i,j]
-                if idx ==-1:
-                    D[i,j] = np.inf
-                else:
-                    D[i,j] = self.dist(q,self.vectors[int(idx)])
-        return D,I
 
     def search_darth(self, Xq: np.ndarray, k: int, efSearch: int, Rt=0.95, ipi=200, mpi=20, predictor=None):
         Xq = np.asarray(Xq, dtype=np.float32)
@@ -415,14 +432,15 @@ class HNSW_DARTH:
 
 
 # darth features extraction
-def darth_extract_features(W_heap, ndis, nstep, firstNN):
-    # W_heap is a max-heap of (neg_dist, idx)
+def darth_extract_features(W_heap, ndis, nstep, firstNN, ninserts):
     dists = [-neg_d for (neg_d, idx) in W_heap]
-    arr = np.array(dists,dtype=np.float32)
+    arr = np.array(dists, dtype=np.float32)
+
     if arr.size == 0:
         return {
             "ndis": int(ndis),
             "nstep": int(nstep),
+            "ninserts": int(ninserts),
             "firstNN": float(firstNN),
             "closestNN": float("inf"),
             "furthestNN": float("inf"),
@@ -432,21 +450,21 @@ def darth_extract_features(W_heap, ndis, nstep, firstNN):
             "p50NN": float("inf"),
             "p75NN": float("inf"),
         }
+
     arr_sorted = np.sort(arr)
     return {
-        # Index progress
         "ndis": int(ndis),
         "nstep": int(nstep),
+        "ninserts": int(ninserts),
 
-        # NN distance
         "firstNN": float(firstNN),
         "closestNN": float(arr_sorted[0]),
         "furthestNN": float(arr_sorted[-1]),
 
-        # NN stats
         "meanNN": float(arr.mean()),
         "varNN": float(arr.var()),
         "p25NN": float(np.percentile(arr_sorted, 25)),
         "p50NN": float(np.percentile(arr_sorted, 50)),
         "p75NN": float(np.percentile(arr_sorted, 75)),
     }
+
