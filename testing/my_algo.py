@@ -35,9 +35,9 @@ if __name__ == "__main__":
     k = 10
 
     print("\nBuilding HNSW_NEW...")
-    idx = build_hnsw_DARTH_cpp(Xb, M=M, efC=efC)
+    idx = build_hnsw_darth(Xb, M=M, efC=efC)
 
-    search_fn = hnsw_darth_cpp_search_fn(idx, efS)
+    search_fn = hnsw_darth_search_fn(idx, efS)
 
     # -------------------------------------------------
     # Run search

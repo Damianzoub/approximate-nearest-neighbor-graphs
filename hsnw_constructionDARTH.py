@@ -6,6 +6,45 @@ class DummyPredictor:
     def predict(self, feats):
         # Dummy predictor that returns random scores
         return 0.0
+
+def darth_extract_features(W_heap, ndis, nstep, firstNN, ninserts):
+    """
+    Table-1 feature set (11 features):
+    ndis, inserts, nstep,
+    firstNN, closestNN, furthestNN,
+    avg, var, med, perc25, perc75
+    """
+    dists = np.array([-neg_d for (neg_d, _) in W_heap], dtype=np.float32)
+
+    if dists.size == 0:
+        return {
+            "ndis": int(ndis),
+            "inserts": int(ninserts),
+            "nstep": int(nstep),
+            "firstNN": float(firstNN),
+            "closestNN": float("inf"),
+            "furthestNN": float("inf"),
+            "avg": float("inf"),
+            "var": 0.0,
+            "med": float("inf"),
+            "perc25": float("inf"),
+            "perc75": float("inf"),
+        }
+
+    return {
+        "ndis": int(ndis),
+        "inserts": int(ninserts),
+        "nstep": int(nstep),
+        "firstNN": float(firstNN),
+        "closestNN": float(np.min(dists)),
+        "furthestNN": float(np.max(dists)),
+        "avg": float(np.mean(dists)),
+        "var": float(np.var(dists)),
+        "med": float(np.median(dists)),
+        "perc25": float(np.percentile(dists, 25)),
+        "perc75": float(np.percentile(dists, 75)),
+    }
+
 class HNSW_DARTH:
 
     def __init__(self,dim,M,efConstruction,metric='l2',seed=42):
@@ -119,7 +158,119 @@ class HNSW_DARTH:
                     
             if not improved:
                 break
-        return best        
+        return best   
+
+    #DARTH search_layer on layer 0 
+    def _search_layer_darth(
+        self,
+        q_vec,
+        ep_id: int,
+        layer: int,
+        efSearch: int,
+        k: int,
+        Rt: float,
+        predictor,
+        ipi: int = 200,
+        mpi: int = 0,
+    ):
+    # If predictor missing, disable early stop (keeps baseline recall)
+        if predictor is None:
+            class _NoStop:
+                def predict(self, feats): return 0.0
+            predictor = _NoStop()
+
+        NBL = ep_id
+        firstNN = self.dist(q_vec, self.vectors[NBL])
+
+        # resultSet: max-heap of size <= k  -> store (-dist, id)
+        resultSet = [(-firstNN, NBL)]
+        heapq.heapify(resultSet)
+
+        # candidateQueue: min-heap -> store (dist, id)
+        candidateQueue = [(firstNN, NBL)]
+        heapq.heapify(candidateQueue)
+
+        visited = {NBL}
+
+        # counters (consistent with initialization above)
+        ndis = 1        # computed firstNN
+        nstep = 0
+        inserts = 1     # inserted NBL into resultSet
+        idis = 0
+
+        pi = float(ipi)
+
+        def get_maxdist_result():
+            if len(resultSet) < k:
+                return float("inf")
+            return -resultSet[0][0]   # worst among top-k
+
+        def try_add_result(node_id, d):
+            nonlocal inserts
+            if len(resultSet) < k:
+                heapq.heappush(resultSet, (-d, node_id))
+                inserts += 1
+                return True
+            if d < -resultSet[0][0]:
+                heapq.heapreplace(resultSet, (-d, node_id))
+                inserts += 1
+                return True
+            return False
+
+        while candidateQueue:
+            # line 11
+            dc, c_id = heapq.heappop(candidateQueue)
+
+            # common HNSW termination (keeps search sane)
+            if dc > get_maxdist_result():
+                break
+
+            # line 12-13 (paper increments + "compute" cDis; dc already is cDis)
+            ndis += 1
+            idis += 1
+
+            # line 14-17
+            try_add_result(c_id, dc)
+
+            # line 18-23
+            for nb in self.layers[layer].get(c_id, set()):
+                if nb in visited:
+                    continue
+                visited.add(nb)
+
+                nd = self.dist(q_vec, self.vectors[nb])
+                ndis += 1
+
+                if nd < get_maxdist_result() or len(candidateQueue) < efSearch:
+                    heapq.heappush(candidateQueue, (nd, nb))
+
+            # line 24-32 (paper-style)
+            pi_int = max(1, int(round(pi)))
+            if (idis % pi_int) == 0:
+                feats = darth_extract_features(resultSet, ndis, nstep, firstNN, inserts)
+                Rp = float(predictor.predict(feats))
+
+                if Rp >= Rt:
+                    break
+
+                # adjust prediction interval (line 30)
+                pi = mpi + (ipi - mpi) * (Rt - Rp)
+
+                # clamp to [mpi, ipi] to avoid nonsense values
+                pi = max(float(mpi), min(float(ipi), float(pi)))
+
+                # reset interval counter (line 31)
+                idis = 0
+
+            # line 33
+            nstep += 1
+
+        # return resultSet (top-k)
+        out = [(-neg_d, node_id) for (neg_d, node_id) in resultSet]
+        out.sort(key=lambda x: x[0])
+        return [node_id for (_, node_id) in out[:k]]
+
+
     #beam_search   
     def _search_layer(self, vec, ep_id: int, layer: int, ef: int):
         if layer < 0 or layer >= len(self.layers) or len(self.layers[layer]) == 0:
@@ -173,132 +324,6 @@ class HNSW_DARTH:
         result.sort(key=lambda x: x[0])
         return [node_id for (_, node_id) in result]
     
-
-    def _search_base_layer_darth(self, q, ep_id, layer, efSearch, k, Rt, predictor, ipi, mpi):
-        """
-        DARTH Algorithm 1 (paper-faithful control flow)
-
-        resultSet: size k (max-heap via (-dist, id))
-        candidateQueue: min-heap (dist, id), admission rule uses efSearch
-        """
-        if layer < 0 or layer >= len(self.layers) or len(self.layers[layer]) == 0:
-            return []
-        if ep_id not in self.vectors:
-            return []
-        if efSearch <= 0 or k <= 0:
-            return []
-
-        # ---------- helpers ----------
-        def rs_maxdist(rs_heap):
-            # GetMaxDistance(resultSet)
-            if len(rs_heap) < k:
-                return float("inf")
-            return -rs_heap[0][0]
-
-        def rs_try_insert(rs_heap, d, idx):
-            """
-            Insert into resultSet if it improves.
-            returns True iff resultSet changed (counts as an 'insert' update).
-            """
-            if len(rs_heap) < k:
-                heapq.heappush(rs_heap, (-d, idx))
-                return True
-            if d < -rs_heap[0][0]:
-                heapq.heapreplace(rs_heap, (-d, idx))
-                return True
-            return False
-
-        # ---------- init ----------
-        visited = set([ep_id])
-
-        # candidateQueue (min-heap)
-        C = []
-
-        # resultSet (max-heap via -dist), size k
-        R = []
-
-        # counters (paper semantics)
-        ndis = 0       # total distance computations
-        idis = 0       # distance computations since last prediction
-        nstep = 0      # number of while-loop iterations
-        inserts = 0    # number of updates to resultSet
-
-        # line: compute firstNN = Distance(q, ep)  (+distance counters)
-        firstNN = self.dist(q, self.vectors[ep_id]); ndis += 1; idis += 1
-
-        # resultSet <- {ep}, candidateQueue <- {ep}
-        heapq.heappush(R, (-firstNN, ep_id)); inserts += 1
-        heapq.heappush(C, (firstNN, ep_id))
-
-        # prediction interval
-        mpi = max(1, int(mpi))
-        ipi = max(mpi, int(ipi))
-        pi = ipi  # start at ipi (paper uses ipi initially)
-
-        # ---------- main loop ----------
-        while C:
-            nstep += 1
-
-            # extract closest candidate
-            _, c = heapq.heappop(C)
-
-            # paper explicitly computes cDis = Distance(q,c)
-            cDis = self.dist(q, self.vectors[c]); ndis += 1; idis += 1
-
-            # if cDis < GetMaxDistance(resultSet): insert c into resultSet
-            if cDis < rs_maxdist(R):
-                if rs_try_insert(R, cDis, c):
-                    inserts += 1
-
-            # explore neighbors of c
-            for nb in self.layers[layer].get(c, set()):
-                if nb in visited:
-                    continue
-                visited.add(nb)
-
-                # nDis = Distance(q, nb)
-                nDis = self.dist(q, self.vectors[nb]); ndis += 1; idis += 1
-
-                # if nDis < GetMaxDistance(resultSet): insert nb into resultSet
-                if nDis < rs_maxdist(R):
-                    if rs_try_insert(R, nDis, nb):
-                        inserts += 1
-
-                # if nDis < maxDist(resultSet) OR |candidateQueue| < efSearch: push
-                if (nDis < rs_maxdist(R)) or (len(C) < efSearch):
-                    heapq.heappush(C, (nDis, nb))
-
-                # ---------- DARTH predictor trigger ----------
-                # Paper condition is "every pi distance computations"
-                if idis >= pi:
-                    feats = darth_extract_features(
-                        W_heap=R,        # IMPORTANT: features from resultSet (size k)
-                        ndis=ndis,
-                        nstep=nstep,
-                        firstNN=firstNN,
-                        ninserts=inserts
-                    )
-                    Rp = float(predictor.predict(feats))
-
-                    # early terminate immediately
-                    if Rp >= Rt:
-                        res = [(-neg_d, idx) for (neg_d, idx) in R]
-                        res.sort(key=lambda x: x[0])
-                        return [idx for (_, idx) in res[:k]]
-
-                    # adaptive interval update
-                    pi = int(mpi + (ipi - mpi) * (Rt - Rp))
-                    pi = max(mpi, min(ipi, pi))
-                    idis = 0
-
-            # (optional) standard “break” condition is implicit in paper via maxDist checks
-            # We keep loop going as long as candidateQueue not empty.
-
-        # natural termination
-        res = [(-neg_d, idx) for (neg_d, idx) in R]
-        res.sort(key=lambda x: x[0])
-        return [idx for (_, idx) in res[:k]]
-
     #here we check about how many nodes are going to become neighbors from the select_layers candidates 
     def _select_neighbors_simple(self,vec,candidates,layer:int,Mmax:int):
         unique_candidates = list(dict.fromkeys(candidates)) #remove duplicates
@@ -330,7 +355,7 @@ class HNSW_DARTH:
                     W_set.add(adj)
 
         # sort candidates by distance to q_vec
-        cand = [(self.dist(q_vec, self.vectors[e]), e) for e in W_set if e in self.vectors]
+        cand = [(self.dist(q_vec, self.vectors[e]), e) for e in W_set]
         cand.sort(key=lambda x: x[0])
 
         R = []          # selected ids
@@ -362,51 +387,19 @@ class HNSW_DARTH:
         return R
          
     #search
-    def search(self, Xq, k, efSearch, Rt=0.95, ipi=200, mpi=20, predictor=None):
-        Xq = np.asarray(Xq, dtype=np.float32)
-        I = np.empty((Xq.shape[0], k), dtype=np.int32)
-        D = np.empty((Xq.shape[0], k), dtype=np.float32)
-
-        if self.entry_id is None:
-            I.fill(-1)
-            D.fill(np.inf)
-            return D, I
-
-        if predictor is None:
-            predictor = DummyPredictor()
-
-        for i, q in enumerate(Xq):
-            ids = self._query(q, k=k, efSearch=efSearch, Rt=Rt, ipi=ipi, mpi=mpi, predictor=predictor)
-
-            I[i, :len(ids)] = ids
-            if len(ids) < k:
-                I[i, len(ids):] = -1
-
-            for j in range(k):
-                idx = I[i, j]
-                D[i, j] = np.inf if idx == -1 else self.dist(q, self.vectors[int(idx)])
-
-        return D, I
-
-    def _query(self, q, k, efSearch, Rt=0.95, ipi=200, mpi=20, predictor=None):
+    def query_darth(self, q_vec, k: int, efSearch: int, Rt: float,
+                    predictor: DummyPredictor, ipi: int = 200, mpi: int = 0, use_mpi: bool = True):
         if self.entry_id is None:
             return []
-
-        if predictor is None:
-            predictor = DummyPredictor()
-
         ep = self.entry_id
-        for lc in range(self.maxlevel, 0, -1):
-            ep = self._search_layer_greedy(q, ep, lc, ef=1)
-
-        return self._search_base_layer_darth(
-            q=q, ep_id=ep, layer=0,
-            efSearch=int(efSearch),
-            k=int(k),
-            Rt=float(Rt),
-            predictor=predictor,
-            ipi=int(ipi),
-            mpi=int(mpi),
+        L = self.maxlevel
+        #greedy in the above layers
+        for lc in range(L,0,-1):
+            ep = self._search_layer_greedy(q_vec,ep,lc,ef=1)
+        
+        return self._search_layer_darth(
+            q_vec, ep_id=ep, layer=0, efSearch=efSearch, k=k,
+            Rt=Rt, predictor=predictor, ipi=ipi, mpi=mpi
         )
 
     #probability of levels
@@ -415,6 +408,45 @@ class HNSW_DARTH:
         U = max(self.rng.random(),1e-12)
         return int(-math.log(U)*l)
     
+    def search_darth(self, Xq: np.ndarray, k: int, efSearch: int,
+                     Rt: float, predictor, ipi: int = 200, mpi: int = 0, use_mpi: bool = True):
+        Xq = np.asarray(Xq, dtype=np.float32)
+        I = np.full((Xq.shape[0], k), -1, dtype=np.int32)
+        D = np.full((Xq.shape[0], k), np.inf, dtype=np.float32)
+
+        for i, q in enumerate(Xq):
+            ids = self.query_darth(q, k=k, efSearch=efSearch, Rt=Rt,
+                                  predictor=predictor, ipi=ipi, mpi=mpi, use_mpi=use_mpi)
+            m = min(len(ids), k)
+            if m > 0:
+                I[i, :m] = ids[:m]
+                for j in range(m):
+                    D[i, j] = self.dist(q, self.vectors[int(I[i, j])])
+        return D, I
+
+    #so i can compare the results with faiss and hnswlib
+    def search(self,Xq:np.ndarray,k:int , efSearch:int):
+        Xq = np.asarray(Xq,dtype=np.float32)
+        I = np.empty((Xq.shape[0],k),dtype=np.int32)
+        D = np.empty((Xq.shape[0],k),dtype=np.float32)
+
+        for i , q in enumerate(Xq):
+            ids = self._query(q,K=k,numSearch=efSearch)
+            #fill output
+            I[i,:len(ids)] = ids
+            if len(ids) < k:
+                I[i,len(ids):] =-1
+            
+            #compute distances for returned ids
+            for j in range(k):
+                idx = I[i,j]
+                if idx ==-1:
+                    D[i,j] = np.inf
+                else:
+                    D[i,j] = self.dist(q,self.vectors[int(idx)])
+        return D,I
+
+
     #calculate dist 
     def dist(self,a:np.ndarray,b:np.ndarray)->float:
         if self.metric =='l2':
@@ -460,40 +492,3 @@ class HNSW_DARTH:
         return new_neigh_set
         
     
-def darth_extract_features(W_heap, ndis, nstep, firstNN, ninserts):
-    """
-    Table-1 feature set (11 features):
-    ndis, inserts, nstep,
-    firstNN, closestNN, furthestNN,
-    avg, var, med, perc25, perc75
-    """
-    dists = np.array([-neg_d for (neg_d, _) in W_heap], dtype=np.float32)
-
-    if dists.size == 0:
-        return {
-            "ndis": int(ndis),
-            "inserts": int(ninserts),
-            "nstep": int(nstep),
-            "firstNN": float(firstNN),
-            "closestNN": float("inf"),
-            "furthestNN": float("inf"),
-            "avg": float("inf"),
-            "var": 0.0,
-            "med": float("inf"),
-            "perc25": float("inf"),
-            "perc75": float("inf"),
-        }
-
-    return {
-        "ndis": int(ndis),
-        "inserts": int(ninserts),
-        "nstep": int(nstep),
-        "firstNN": float(firstNN),
-        "closestNN": float(np.min(dists)),
-        "furthestNN": float(np.max(dists)),
-        "avg": float(np.mean(dists)),
-        "var": float(np.var(dists)),
-        "med": float(np.median(dists)),
-        "perc25": float(np.percentile(dists, 25)),
-        "perc75": float(np.percentile(dists, 75)),
-    }
