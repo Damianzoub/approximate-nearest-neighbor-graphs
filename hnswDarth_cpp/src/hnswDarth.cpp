@@ -1,52 +1,14 @@
-// hnsw_darth.cpp
 #include "hnswDarth.h"
 #include <cmath>
-#include <algorithm>
 #include <stdexcept>
-#include <numeric>
-
-HNSW_DARTH::HNSW_DARTH(int dim, int M, int efConstruction, Metric metric, uint64_t seed)
-    : dim_(dim),
-      M_(M),
-      M0_(2 * M),
-      efConstruction_(efConstruction),
-      metric_(metric),
-      maxlevel_(-1),
-      entry_id_(-1),
-      mL_(1.0 / std::log((double)M)),
-      rng_(seed),
-      unif_(0.0, 1.0) {
-    if (dim_ <= 0) throw std::runtime_error("dim must be >0");
-    if (M_ < 2) throw std::runtime_error("M must be >=2");
-}
-
-float HNSW_DARTH::dist(const std::vector<float>& a, const std::vector<float>& b) const {
-    if (metric_ == Metric::L2) {
-        float s = 0.0f;
-        for (int i = 0; i < dim_; ++i) {
-            float d = a[i] - b[i];
-            s += d * d;
-        }
-        return s;
-    } else { // Cosine distance = 1 - cos
-        double dot=0, na=0, nb=0;
-        for (int i = 0; i < dim_; ++i) {
-            dot += (double)a[i] * (double)b[i];
-            na  += (double)a[i] * (double)a[i];
-            nb  += (double)b[i] * (double)b[i];
-        }
-        double denom = std::sqrt(na) * std::sqrt(nb);
-        if (denom == 0.0) return 1.0f;
-        double cosv = dot / denom;
-        return (float)(1.0 - cosv);
+#include <queue>
+#include <algorithm>
+#include <cstring>
+void HNSW_DARTH::check_dim(const std::vector<float>& v) const{
+    if (static_cast<int>(v.size()) != dim_){
+        throw std::runtime_error("Vector dimension mismatch: expected " + std::to_string(dim_) + ", got" + std::to_string(v.size()));
     }
 }
-
-int HNSW_DARTH::sample_level() const {
-    double r = -std::log(unif_(rng_)) * mL_;
-    return (int)r;
-}
-
 static inline void erase_swap(std::vector<int>& v, int x) {
     for (size_t i = 0; i < v.size(); ++i) {
         if (v[i] == x) {
@@ -57,242 +19,480 @@ static inline void erase_swap(std::vector<int>& v, int x) {
     }
 }
 
-int HNSW_DARTH::insert(const std::vector<float>& vec, int node_id) {
-    check_dim(vec);
 
+HNSW_DARTH::HNSW_DARTH(int dim ,int M ,int efConstruction, Metric metric, uint64_t seed) :
+    dim_(dim),
+      M_(M),
+      M0_(2 * M),
+      efConstruction_(efConstruction),
+      metric_(metric),
+      maxlevel_(-1),
+      entry_id_(-1),
+      mL_(1.0 / std::log(static_cast<double>(M))),
+      rng_(seed),
+      unif_(0.0, 1.0),
+      use_heuristic_(true){
+
+        if (dim_ <= 0) throw std::runtime_error("dim must be > 0");
+        if (M_ < 2) throw std::runtime_error("M must be >=2");
+        if (efConstruction_ < 1) throw std::runtime_error("efConstruction must be >=1");
+}
+
+//level sampling
+int HNSW_DARTH::sample_level() const{
+    double U = unif_(rng_);
+    if (U <1e-12) U = 1e-12;
+    return static_cast<int>(-std::log(U) * mL_);
+}
+// updating levels
+void HNSW_DARTH::ensure_node_capacity(int slot,int upto_level){
+    for (int lc = 0; lc <= upto_level; ++lc){
+        auto &adj = layers_[lc];
+        if ((int)adj.size() <= slot) adj.resize(slot+1);
+    }
+}
+
+void HNSW_DARTH::ensure_layers(int new_maxlevel){
+    if (new_maxlevel < 0) return ;
+    if ((int)layers_.size() <= new_maxlevel){
+        layers_.resize(new_maxlevel+1);
+    }
+}
+
+//greedy search 
+int HNSW_DARTH::search_layer_greedy(const std::vector<float>& q, int ep, int layer) const {
+    int best = ep;
+    const float* qptr = q.data();
+    float q_inv_norm = 1.0f;
+    if (metric_ == Metric::Cosine) q_inv_norm = inv_norm_ptr(qptr, dim_);
+
+    float bestDist = dist_ptr(qptr, best, q_inv_norm);
+
+    while (true) {
+        bool improved = false;
+
+        if (best < 0 || best >= (int)level_.size() || level_[best] < layer) break;
+        const auto& neigh = layers_[layer][best];
+
+        for (int nb : neigh) {
+            float d = dist_ptr(qptr, nb, q_inv_norm);
+            if (d < bestDist) {
+                bestDist = d;
+                best = nb;
+                improved = true;
+            }
+        }
+        if (!improved) break;
+    }
+    return best;
+}
+
+
+std::vector<int> HNSW_DARTH::search_layer_beam(const std::vector<float>& q, int ep, int layer, int ef) const {
+    using Item = std::pair<float,int>;
+    if (layer < 0 || layer >= (int)layers_.size()) return {};
+    if (ep < 0) return {};
+    if (ef <= 0) return {};
+
+    const float* qptr = q.data();
+    float q_inv_norm = 1.0f;
+    if (metric_ == Metric::Cosine) q_inv_norm = inv_norm_ptr(qptr, dim_);
+
+    begin_search_tag();
+
+    auto& C = scratch_.C;   // min-heap by distance
+    auto& W = scratch_.W;   // max-heap by distance
+    auto& tmp = scratch_.tmp;
+
+    C.clear(); W.clear(); tmp.clear();
+    C.reserve((size_t)ef * 2);
+    W.reserve((size_t)ef + 1);
+    tmp.reserve((size_t)ef + 1);
+
+    auto min_cmp = [](const auto& a, const auto& b) { return a.first > b.first; }; // smallest on top
+    auto max_cmp = [](const auto& a, const auto& b) { return a.first < b.first; }; // largest on top
+
+    auto heap_push = [](auto& h, const auto& item, auto cmp) {
+        h.push_back(item);
+        std::push_heap(h.begin(), h.end(), cmp);
+    };
+    auto heap_pop = [](auto& h, auto cmp) {
+        std::pop_heap(h.begin(), h.end(), cmp);
+        auto item = h.back();
+        h.pop_back();
+        return item;
+    };
+
+    float dist_ep = dist_ptr(qptr, ep,q_inv_norm);
+    mark_visited(ep);
+
+    heap_push(C, Item(dist_ep, ep), min_cmp);
+    heap_push(W, Item(dist_ep,ep), max_cmp);
+
+    while (!C.empty()) {
+        auto [dist_c, c_id] = heap_pop(C, min_cmp);
+
+        float worstDist = W.front().first; // max-heap: worst is at front
+        if (dist_c > worstDist) break;
+
+        if (c_id < 0 || c_id >= (int)level_.size() || level_[c_id] < layer) continue;
+        const auto& neigh = layers_[layer][c_id];
+
+        for (int nb : neigh) {
+            if (is_visited(nb)) continue;
+            
+
+            float d = dist_ptr(qptr, nb,q_inv_norm);
+
+            if ((int)W.size() < ef) {
+                mark_visited(nb);
+                heap_push(C, Item(d, nb), min_cmp);
+                heap_push(W, Item(d, nb), max_cmp);
+            } else {
+                float worstDist = W.front().first;
+                if (d < worstDist) {
+                    mark_visited(nb);
+                    heap_push(C, Item(d, nb), min_cmp);
+
+                    // replace worst in W
+                    std::pop_heap(W.begin(), W.end(), max_cmp);
+                    W.back() = {d, nb};
+                    std::push_heap(W.begin(), W.end(), max_cmp);
+                }
+            }
+        }
+    }
+
+    tmp = W;
+    std::sort(tmp.begin(), tmp.end(), [](const auto& a, const auto& b) { return a.first < b.first; });
+
+    std::vector<int> out;
+    out.reserve(tmp.size());
+    for (auto& p : tmp) out.push_back(p.second);
+    return out;
+}
+
+
+std::vector<int> HNSW_DARTH::select_neighbors_simple(const std::vector<float>& q, const std::vector<int>& candidates, int layer, int Mmax) const{
+
+    if (Mmax <= 0) return {};
+    std::vector<int> uniq;
+    uniq.reserve(candidates.size());{
+        std::unordered_set<int> seen;
+        seen.reserve(candidates.size() * 2 +1);
+        for (int id : candidates) {
+            if (seen.insert(id).second) uniq.push_back(id);
+        }
+    }
+
+    if (static_cast<int>(uniq.size()) <= Mmax) return uniq;
+    std::vector<std::pair<float,int>> dlist;
+    dlist.reserve(uniq.size());
+    const float* qptr = q.data();
+    float q_inv_norm = 1.0f;
+    if (metric_ == Metric::Cosine) q_inv_norm = inv_norm_ptr(qptr, dim_);
+
+    for (int nb : uniq){
+        dlist.push_back({dist_ptr(qptr, nb, q_inv_norm), nb});
+    }
+    std::sort(dlist.begin(),dlist.end(), [](const auto& a, const auto& b){return a.first < b.first;});
+
+    std::vector<int> out;
+    out.reserve(Mmax);
+    for (int i =0; i<Mmax; ++i) out.push_back(dlist[i].second);
+    return out;
+}
+
+std::vector<int> HNSW_DARTH::select_neighbors_heuristic_paper_slot(
+    int qslot,
+    const std::vector<int>& candidates,
+    int layer, int Mmax,
+    bool extendCandidates,
+    bool keepPruned
+) const {
+    if (Mmax <= 0) return {};
+
+    std::unordered_set<int> Wset;
+    Wset.reserve(candidates.size()*3 + 1);
+    for (int id : candidates) { 
+        if (id == qslot) continue; 
+        Wset.insert(id);
+    }
+
+    if (extendCandidates) {
+        std::vector<int> base(Wset.begin(), Wset.end());
+        for (int e : base) {
+            if (e < 0 || e >= (int)level_.size() || level_[e] < layer) continue;
+            for (int adj : layers_[layer][e]) Wset.insert(adj);
+        }
+    }
+
+    std::vector<std::pair<float,int>> cand;
+    cand.reserve(Wset.size());
+    for (int e : Wset) {
+        cand.push_back({dist_slots(qslot, e), e});
+    }
+    std::sort(cand.begin(), cand.end(),
+              [](auto& a, auto& b){ return a.first < b.first; });
+
+    std::vector<int> R;
+    R.reserve(Mmax);
+
+    std::vector<std::pair<float,int>> discarded;
+    discarded.reserve(cand.size());
+
+    for (auto& [d_qe, e] : cand) {
+        bool good = true;
+        for (int r : R) {
+            float d_er = dist_slots(e, r);
+            if (d_er < d_qe) { good = false; break; }
+        }
+        if (good) {
+            R.push_back(e);
+            if ((int)R.size() == Mmax) break;
+        } else {
+            discarded.push_back({d_qe, e});
+        }
+    }
+
+    if (keepPruned && (int)R.size() < Mmax) {
+        std::sort(discarded.begin(), discarded.end(),
+                  [](auto& a, auto& b){ return a.first < b.first; });
+        for (auto& p : discarded) {
+            int e = p.second;
+            bool exists = false;
+            for (int x : R) if (x == e) { exists = true; break; }
+            if (!exists) {
+                R.push_back(e);
+                if ((int)R.size() == Mmax) break;
+            }
+        }
+    }
+    return R;
+}
+
+
+std::vector<int> HNSW_DARTH::prune_connection(int node_id, int layer, int Mmax) {
+    if (node_id < 0 || node_id >= (int)level_.size() || level_[node_id] < layer) return {};
+    auto& neigh = layers_[layer][node_id];
+    if ((int)neigh.size() <= Mmax) return neigh;
+
+    std::vector<int> neighbors = neigh;
+
+    std::vector<int> newList;
+    if (use_heuristic_) {
+        newList = select_neighbors_heuristic_paper_slot(node_id, neighbors, layer, Mmax, true, false);
+    } else {
+        // you can also create a slot-based simple selector similarly, or keep your old one
+        // but old one needs q vector; better to write select_neighbors_simple_slot too.
+        newList = select_neighbors_heuristic_paper_slot(node_id, neighbors, layer, Mmax, false, true);
+    }
+
+    std::unordered_set<int> keep;
+    keep.reserve(newList.size()*2 + 1);
+    for (int x : newList) keep.insert(x);
+
+    for (int old_nb : neigh) {
+        if (!keep.count(old_nb)) {
+            if (old_nb >= 0 && old_nb < (int)level_.size() && level_[old_nb] >= layer) {
+                erase_swap(layers_[layer][old_nb], node_id);
+            }
+        }
+    }
+
+    neigh = std::move(newList);
+    return neigh;
+}
+
+std::vector<int> HNSW_DARTH::query(const std::vector<float>& q, int k, int efSearch) const {
+    auto slots = query_slots(q, k, efSearch);
+    for (int& s : slots) s = slot_to_id_[s];
+    return slots;
+}
+
+std::vector<int> HNSW_DARTH::query_slots(const std::vector<float>& q, int k, int efSearch) const {
+    check_dim(q);
+    if (entry_id_ < 0) return {};
+    if (k <= 0) return {};
+    if (efSearch <= 0) efSearch = 1;
+
+    int ep = entry_id_;
+    for (int lc = maxlevel_; lc > 0; --lc) {
+        ep = search_layer_greedy(q, ep, lc);
+    }
+
+    auto slots = search_layer_beam(q, ep, 0, efSearch);
+    if ((int)slots.size() > k) slots.resize(k);
+    return slots;
+}
+
+
+int HNSW_DARTH::insert(const std::vector<float>& vec_in, int node_id) {
+    check_dim(vec_in);
+
+    // assign external id if not provided
     if (node_id < 0) {
-        node_id = (int)vectors_.size();
-        while (vectors_.find(node_id) != vectors_.end()) ++node_id;
+        node_id = (int)slot_to_id_.size();
+        while (id_to_slot_.find(node_id) != id_to_slot_.end()) ++node_id;
     }
-    if (vectors_.find(node_id) != vectors_.end()) {
-        throw std::runtime_error("Node id already exists");
+    if (id_to_slot_.find(node_id) != id_to_slot_.end()) {
+        throw std::runtime_error("Node id already exists: " + std::to_string(node_id));
     }
 
-    vectors_[node_id] = vec;
+    // create slot and store vector contiguously
+    int slot = (int)slot_to_id_.size();
+    slot_to_id_.push_back(node_id);
+    id_to_slot_[node_id] = slot;
+    size_t off = data_.size();
+    data_.resize(off + (size_t)dim_);
+    std::memcpy(data_.data()+off,vec_in.data(),(size_t)dim_ * sizeof(float));
+    visited_tag_.resize(slot_to_id_.size(),0);
+
+    if (metric_ == Metric::Cosine){
+        const float* vptr = data_.data()+off;
+        inv_norms_.push_back(inv_norm_ptr(vptr,dim_));
+    }else{
+        inv_norms_.push_back(1.0f); // dummy value for L2
+    }
 
     int l = sample_level();
-
+    level_.push_back(l);
+    ensure_layers(std::max(maxlevel_, l));
+    ensure_node_capacity(slot,l);
+    // first node
     if (entry_id_ < 0) {
-        maxlevel_ = l;
-        entry_id_ = node_id;
-        layers_.resize(maxlevel_ + 1);
-        for (int lc = 0; lc <= maxlevel_; ++lc) {
-            layers_[lc][node_id] = {};
+        ensure_layers(l);
+        ensure_node_capacity(slot,l);
+        for (int lc = 0; lc <= l; ++lc) {
+            int Mmax = (lc == 0 ? M0_ : M_);
+            layers_[lc][slot].clear();
+            layers_[lc][slot].reserve((size_t)Mmax+1);
         }
+        entry_id_ = slot;
+        maxlevel_ = l;
         return node_id;
     }
 
+    int old_top = maxlevel_;
     if (l > maxlevel_) {
-        layers_.resize(l + 1);
+        ensure_layers(l);
         maxlevel_ = l;
     }
 
-    for (int lc = 0; lc <= l; ++lc) {
-        layers_[lc][node_id] = {};
-    }
-
     int ep = entry_id_;
+    int L = old_top;
 
-    for (int lc = maxlevel_; lc > l; --lc) {
-        ep = search_layer_greedy(vec, ep, lc);
+    // Phase 1: greedy from top down to level l+1
+    for (int lc = L; lc > l; --lc) {
+        ep = search_layer_greedy(vec_in, ep, lc); // vec_in used as query vector, OK
     }
 
-    for (int lc = std::min(l, maxlevel_); lc >= 0; --lc) {
-        auto candidates = search_layer(vec, ep, lc, efConstruction_);
+    // Phase 2
+    for (int lc = std::min(L, l); lc >= 0; --lc) {
+    int Mmax = (lc == 0 ? M0_ : M_);
 
-        int Mmax = (lc == 0) ? M0_ : M_;
+    layers_[lc][slot].reserve((size_t)Mmax + 1);
+    
+    std::vector<int> W = search_layer_beam(vec_in, ep, lc, efConstruction_);
 
-        std::vector<int> selected;
-        if (use_heuristic_) {
-            selected = select_neighbors_heuristic_paper(vec, candidates, lc, Mmax, true, true);
-        } else {
-            selected = candidates;
-            if ((int)selected.size() > Mmax) selected.resize(Mmax);
+    std::vector<int> neighbors;
+    if (use_heuristic_) {
+        neighbors = select_neighbors_heuristic_paper_slot(slot, W, lc, Mmax, true, false);
+    } else {
+        neighbors = select_neighbors_simple(vec_in, W, lc, Mmax);
+    }
+    auto& a = layers_[lc][slot];
+    for (int nb : neighbors) {
+        if (nb < 0 || nb >= (int)level_.size() || level_[nb] < lc) continue;
+        
+        auto& b = layers_[lc][nb];
+        b.reserve((size_t)Mmax+1);
+        a.push_back(nb);
+        bool exists = false;
+        for (int x : b) {
+            if (x == slot) {
+                exists = true;
+                break;
+            }
         }
+        if (!exists) b.push_back(slot);
 
-        layers_[lc][node_id] = selected;
-
-        for (int nb : selected) {
-            auto& nbrs = layers_[lc][nb];
-            nbrs.push_back(node_id);
-            if ((int)nbrs.size() > Mmax) prune_connections(nb, lc, Mmax);
+        if ((int)b.size() > Mmax) {
+            prune_connection(nb, lc, Mmax);
         }
-
-        if (!selected.empty()) ep = selected[0];
     }
 
-    if (l > maxlevel_) entry_id_ = node_id;
+    if (!W.empty()) ep = W.front();
+    }
+
+
+    if (l > old_top) {
+        entry_id_ = slot;
+    }
+
     return node_id;
 }
 
-int HNSW_DARTH::search_layer_greedy(const std::vector<float>& q, int ep, int layer) const {
-    int cur = ep;
-    float curDist = dist(q, vectors_.at(cur));
-    bool changed = true;
 
-    while (changed) {
-        changed = false;
-        const auto it = layers_[layer].find(cur);
-        if (it == layers_[layer].end()) break;
+void HNSW_DARTH::search(const std::vector<std::vector<float>>& Xq,
+                      int k, int efSearch,
+                      std::vector<std::vector<float>>& D,
+                      std::vector<std::vector<int>>& I) const {
+    D.assign(Xq.size(), std::vector<float>(k, std::numeric_limits<float>::infinity()));
+    I.assign(Xq.size(), std::vector<int>(k, -1));
 
-        for (int nb : it->second) {
-            float d = dist(q, vectors_.at(nb));
-            if (d < curDist) {
-                curDist = d;
-                cur = nb;
-                changed = true;
-            }
+    for (size_t i = 0; i < Xq.size(); ++i) {
+        const auto& q = Xq[i];
+        check_dim(q);
+
+        const float* qptr = q.data();
+        float q_inv_norm = 1.0f;
+        if (metric_ == Metric::Cosine) {
+            q_inv_norm = inv_norm_ptr(qptr, dim_);
+        }
+
+        auto slots = query_slots(q, k, efSearch);
+
+        for (size_t j = 0; j < slots.size(); ++j) {
+            int slot = slots[j];
+            I[i][j] = slot_to_id_[slot];
+            D[i][j] = dist_ptr(qptr, slot, q_inv_norm);  // <-- use cached q_inv_norm
         }
     }
-    return cur;
 }
 
-std::vector<int> HNSW_DARTH::search_layer(const std::vector<float>& q, int ep_id, int lc, int ef) const {
-    using Pair = std::pair<float,int>;
-
-    struct MinCmp { bool operator()(const Pair& a, const Pair& b) const { return a.first > b.first; } };
-    struct MaxCmp { bool operator()(const Pair& a, const Pair& b) const { return a.first < b.first; } };
-
-    std::priority_queue<Pair, std::vector<Pair>, MinCmp> cand;
-    std::priority_queue<Pair, std::vector<Pair>, MaxCmp> best;
-
-    std::unordered_set<int> visited;
-    visited.reserve((size_t)ef * 2);
-
-    float d0 = dist(q, vectors_.at(ep_id));
-    cand.push({d0, ep_id});
-    best.push({d0, ep_id});
-    visited.insert(ep_id);
-
-    while (!cand.empty()) {
-        Pair c = cand.top(); cand.pop();
-
-        float worst = best.top().first;
-        if (c.first > worst) break;
-
-        const auto it = layers_[lc].find(c.second);
-        if (it == layers_[lc].end()) continue;
-
-        for (int nb : it->second) {
-            if (visited.find(nb) != visited.end()) continue;
-            visited.insert(nb);
-
-            float d = dist(q, vectors_.at(nb));
-            if ((int)best.size() < ef || d < best.top().first) {
-                cand.push({d, nb});
-                best.push({d, nb});
-                if ((int)best.size() > ef) best.pop();
-            }
-        }
-    }
-
-    std::vector<Pair> tmp;
-    tmp.reserve(best.size());
-    while (!best.empty()) { tmp.push_back(best.top()); best.pop(); }
-    std::sort(tmp.begin(), tmp.end(), [](const Pair& a, const Pair& b){ return a.first < b.first; });
-
-    std::vector<int> ids;
-    ids.reserve(tmp.size());
-    for (auto& p : tmp) ids.push_back(p.second);
-    return ids;
-}
-
-std::vector<int> HNSW_DARTH::select_neighbors_heuristic_paper(const std::vector<float>& q,
-                                                              const std::vector<int>& candidates,
-                                                              int lc,
-                                                              int M,
-                                                              bool extend_candidates,
-                                                              bool keep_pruned_connections) const {
-    std::vector<int> cand = candidates;
-
-    if (extend_candidates) {
-        std::unordered_set<int> extra;
-        for (int c : candidates) {
-            const auto it = layers_[lc].find(c);
-            if (it == layers_[lc].end()) continue;
-            for (int nb : it->second) extra.insert(nb);
-        }
-        for (int nb : extra) cand.push_back(nb);
-    }
-
-    std::vector<std::pair<float,int>> dlist;
-    dlist.reserve(cand.size());
-    for (int c : cand) dlist.push_back({dist(q, vectors_.at(c)), c});
-    std::sort(dlist.begin(), dlist.end(), [](auto& a, auto& b){ return a.first < b.first; });
-
-    std::vector<int> result;
-    result.reserve(M);
-
-    std::vector<int> discarded;
-    discarded.reserve(dlist.size());
-
-    for (auto& di : dlist) {
-        int c = di.second;
-        bool good = true;
-        for (int r : result) {
-            float dcr = dist(vectors_.at(c), vectors_.at(r));
-            if (dcr < di.first) { good = false; break; }
-        }
-        if (good) {
-            result.push_back(c);
-            if ((int)result.size() == M) break;
-        } else if (keep_pruned_connections) {
-            discarded.push_back(c);
-        }
-    }
-
-    if (keep_pruned_connections && (int)result.size() < M) {
-        for (int c : discarded) {
-            result.push_back(c);
-            if ((int)result.size() == M) break;
-        }
-    }
-
-    return result;
-}
-
-void HNSW_DARTH::prune_connections(int node_id, int lc, int Mmax) {
-    auto& nbrs = layers_[lc][node_id];
-
-    std::vector<std::pair<float,int>> dlist;
-    dlist.reserve(nbrs.size());
-    for (int nb : nbrs) dlist.push_back({dist(vectors_.at(node_id), vectors_.at(nb)), nb});
-    std::sort(dlist.begin(), dlist.end(), [](auto& a, auto& b){ return a.first < b.first; });
-
-    nbrs.clear();
-    for (int i = 0; i < (int)dlist.size() && i < Mmax; ++i) nbrs.push_back(dlist[i].second);
-}
-
+// ====================== DARTH: Feature extraction ======================
 HNSW_DARTH::DarthFeatures HNSW_DARTH::darth_extract_features(
-    const std::vector<std::pair<float,int>>& result_maxheap,
+    const std::vector<std::pair<float,int>>& result_topk,
     int ndis, int nstep, float firstNN, int ninserts
-) {
+){
     DarthFeatures f;
     f.ndis = ndis;
     f.nstep = nstep;
     f.ninserts = ninserts;
     f.firstNN = firstNN;
 
-    if (result_maxheap.empty()) return f;
+    if (result_topk.empty()) return f;
 
     std::vector<float> ds;
-    ds.reserve(result_maxheap.size());
+    ds.reserve(result_topk.size());
+
     float minv = std::numeric_limits<float>::infinity();
     float maxv = 0.0f;
 
-    for (auto& p : result_maxheap) {
+    for (const auto& p : result_topk) {
         float d = p.first;
         ds.push_back(d);
-        minv = std::min(minv, d);
-        maxv = std::max(maxv, d);
+        if (d < minv) minv = d;
+        if (d > maxv) maxv = d;
     }
 
     std::sort(ds.begin(), ds.end());
-    f.closestNN = minv;
+    f.closestNN  = minv;
     f.furthestNN = maxv;
 
     double mean = 0.0;
-    for (float x : ds) mean += x;
+    for (float x : ds) mean += (double)x;
     mean /= (double)ds.size();
     f.meanNN = (float)mean;
 
@@ -309,201 +509,254 @@ HNSW_DARTH::DarthFeatures HNSW_DARTH::darth_extract_features(
         double idx = p * (ds.size() - 1);
         size_t i0 = (size_t)std::floor(idx);
         size_t i1 = std::min(i0 + 1, ds.size() - 1);
-        double a = idx - (double)i0;
+        double a  = idx - (double)i0;
         return (float)((1.0 - a) * ds[i0] + a * ds[i1]);
     };
 
     f.p25NN = pct(0.25);
     f.p50NN = pct(0.50);
     f.p75NN = pct(0.75);
-
     return f;
 }
 
-std::vector<int> HNSW_DARTH::query(const std::vector<float>& q, int k, int efSearch) const {
-    check_dim(q);
-    if (entry_id_ < 0) return {};
 
-    int ep = entry_id_;
+// ====================== DARTH: Base-layer search ======================
+// Python-style:
+// - candidateQueue: min-heap of (dist, slot)
+// - resultSet: max-heap of size <= k (dist, slot), worst on top
+// - stop if dc > worst(top-k) (or inf if <k)
+// - every pi steps, compute features from resultSet and predictor, early stop
+std::vector<int> HNSW_DARTH::search_layer_darth(
+    const std::vector<float>& q_vec,
+    int ep_id,          // NOTE: ep_id is a SLOT in your engine (entry_id_ is slot)
+    int layer,
+    int efSearch,
+    int k,
+    float Rt,
+    const IPredictor* predictor,
+    int ipi,
+    int mpi
+) const {
+    using Pair = std::pair<float,int>; // (dist, slot)
 
-    // greedy descent from top layer down to 1
-    for (int lc = maxlevel_; lc > 0; --lc) {
-        ep = search_layer_greedy(q, ep, lc);
+    // predictor fallback: disable early stop if nullptr
+    struct NoStop final : IPredictor {
+        float predict(const DarthFeatures&) const override { return 0.0f; }
+    };
+    NoStop nostop;
+    const IPredictor* pred = predictor ? predictor : &nostop;
+
+    if (layer < 0 || layer >= (int)layers_.size()) return {};
+    if (ep_id < 0 || ep_id >= (int)level_.size()) return {};
+    if (level_[ep_id] < layer) return {};
+    if (k <= 0) return {};
+    if (efSearch <= 0) efSearch = 1;
+
+    ipi = std::max(1, ipi);
+    mpi = std::max(0, mpi);
+    if (mpi > ipi) mpi = ipi;
+
+    const float* qptr = q_vec.data();
+    float q_inv_norm = 1.0f;
+    if (metric_ == Metric::Cosine) q_inv_norm = inv_norm_ptr(qptr, dim_);
+
+    begin_search_tag();
+
+    // scratch buffers
+    auto& cand = scratch_.C;   // min-heap (dist, slot)
+    auto& res  = scratch_.W;   // max-heap (dist, slot) top-k
+    auto& tmp  = scratch_.tmp; // for copying/sorting
+
+    cand.clear(); res.clear(); tmp.clear();
+    cand.reserve((size_t)efSearch * 2 + 16);
+    res.reserve((size_t)k + 16);
+    tmp.reserve((size_t)k + 16);
+
+    auto min_cmp = [](const Pair& a, const Pair& b) { return a.first > b.first; }; // smallest on top
+    auto max_cmp = [](const Pair& a, const Pair& b) { return a.first < b.first; }; // largest on top
+
+    auto heap_push = [](auto& h, const Pair& item, auto cmp) {
+        h.push_back(item);
+        std::push_heap(h.begin(), h.end(), cmp);
+    };
+    auto heap_pop = [](auto& h, auto cmp) -> Pair {
+        std::pop_heap(h.begin(), h.end(), cmp);
+        Pair item = h.back();
+        h.pop_back();
+        return item;
+    };
+
+    const int NBL = ep_id;
+    float firstNN = dist_ptr(qptr, NBL, q_inv_norm);
+
+    mark_visited(NBL);
+
+    heap_push(cand, Pair(firstNN, NBL), min_cmp);
+    heap_push(res,  Pair(firstNN, NBL), max_cmp);
+
+    // Counters: match Python initialization (already computed + inserted firstNN)
+    int ndis     = 1;
+    int nstep    = 0;
+    int ninserts = 1;
+    int idis     = 0;
+
+    float pi = (float)ipi;
+
+    auto get_maxdist_result = [&]() -> float {
+        if ((int)res.size() < k) return std::numeric_limits<float>::infinity();
+        return res.front().first; // max-heap: worst is at front
+    };
+
+    auto try_add_result = [&](int slot, float d) -> bool {
+        if ((int)res.size() < k) {
+            heap_push(res, Pair(d, slot), max_cmp);
+            ninserts++;
+            return true;
+        }
+        if (d < res.front().first) {
+            // replace worst
+            std::pop_heap(res.begin(), res.end(), max_cmp);
+            res.back() = {d, slot};
+            std::push_heap(res.begin(), res.end(), max_cmp);
+            ninserts++;
+            return true;
+        }
+        return false;
+    };
+
+    while (!cand.empty()) {
+        // pop closest candidate
+        Pair cur = heap_pop(cand, min_cmp);
+        float dc = cur.first;
+        int c_id = cur.second;
+
+        // termination check
+        if (dc > get_maxdist_result()) break;
+
+        // python: ndis += 1; idis += 1; try_add_result(c_id, dc)
+        ndis += 1;
+        idis += 1;
+        (void)try_add_result(c_id, dc);
+
+        if (c_id < 0 || c_id >= (int)level_.size() || level_[c_id] < layer) {
+            nstep += 1;
+            continue;
+        }
+
+        const auto& neigh = layers_[layer][c_id];
+
+        for (int nb : neigh) {
+            if (nb < 0 || nb >= (int)level_.size() || level_[nb] < layer) continue;
+            if (is_visited(nb)) continue;
+
+            mark_visited(nb);
+
+            float nd = dist_ptr(qptr, nb, q_inv_norm);
+            ndis += 1;
+
+            // python condition:
+            // if nd < get_maxdist_result() or len(candidateQueue) < efSearch:
+            if (nd < get_maxdist_result() || (int)cand.size() < efSearch) {
+                heap_push(cand, Pair(nd, nb), min_cmp);
+            }
+        }
+
+        // DARTH early termination
+        int pi_int = std::max(1, (int)std::lround((double)pi));
+        if ((idis % pi_int) == 0) {
+            // copy current top-k heap into tmp for feature extraction
+            tmp = res; // heap order is fine; extractor sorts distances internally
+            auto feats = darth_extract_features(tmp, ndis, nstep, firstNN, ninserts);
+            float Rp = (float)pred->predict(feats);
+
+            if (Rp >= Rt) break;
+
+            // pi = mpi + (ipi - mpi) * (Rt - Rp)
+            pi = (float)mpi + (float)(ipi - mpi) * (Rt - Rp);
+            if (pi < (float)mpi) pi = (float)mpi;
+            if (pi > (float)ipi) pi = (float)ipi;
+
+            idis = 0;
+        }
+
+        nstep += 1;
     }
 
-    // layer 0 best-first search with efSearch
-    auto cand = search_layer(q, ep, 0, efSearch);
+    // produce sorted output (closest first), return slots
+    tmp = res;
+    std::sort(tmp.begin(), tmp.end(),
+              [](const Pair& a, const Pair& b){ return a.first < b.first; });
 
-    // sort defensively by actual distance
-    std::vector<std::pair<float,int>> tmp;
-    tmp.reserve(cand.size());
-    for (int id : cand) tmp.push_back({dist(q, vectors_.at(id)), id});
-    std::sort(tmp.begin(), tmp.end(), [](auto& a, auto& b){ return a.first < b.first; });
-
-    const int m = std::min((int)tmp.size(), k);
+    int m = std::min((int)tmp.size(), k);
     std::vector<int> out;
     out.reserve(m);
     for (int i = 0; i < m; ++i) out.push_back(tmp[i].second);
     return out;
 }
-std::vector<int> HNSW_DARTH::search_layer_darth(
-    const std::vector<float>& q,
-    int ep_id,
-    int lc,
-    int efSearch,
-    int k,
-    float Rt,
-    const IPredictor& predictor,
-    int ipi,
-    int mpi
-) const
-{
-    using Pair = std::pair<float,int>;
 
-    struct MinCmp { bool operator()(const Pair& a, const Pair& b) const { return a.first > b.first; } };
-    struct MaxCmp { bool operator()(const Pair& a, const Pair& b) const { return a.first < b.first; } };
 
-    std::priority_queue<Pair, std::vector<Pair>, MinCmp> cand;
-    std::priority_queue<Pair, std::vector<Pair>, MaxCmp> best;
-
-    std::unordered_set<int> visited;
-    visited.reserve((size_t)efSearch * 2);
-
-    float d0 = dist(q, vectors_.at(ep_id));
-    cand.push({d0, ep_id});
-    best.push({d0, ep_id});
-    visited.insert(ep_id);
-
-    int ndis = 1;
-    int nstep = 0;
-    int ninserts = 1;
-    float firstNN = d0;
-
-    while (!cand.empty()) {
-        Pair c = cand.top(); cand.pop();
-        nstep++;
-
-        float worst = best.top().first;
-        if (c.first > worst) break;
-
-        const auto it = layers_[lc].find(c.second);
-        if (it == layers_[lc].end()) continue;
-
-        for (int nb : it->second) {
-            if (visited.find(nb) != visited.end()) continue;
-            visited.insert(nb);
-
-            float d = dist(q, vectors_.at(nb));
-            ndis++;
-
-            if ((int)best.size() < efSearch || d < best.top().first) {
-                cand.push({d, nb});
-                best.push({d, nb});
-                ninserts++;
-
-                if ((int)best.size() > efSearch)
-                    best.pop();
-            }
-        }
-
-        // ---- DARTH EARLY TERMINATION ----
-        if (nstep % ipi == 0 && (int)best.size() >= k) {
-            std::vector<Pair> heapCopy;
-            auto tmp = best;
-            while (!tmp.empty()) {
-                heapCopy.push_back(tmp.top());
-                tmp.pop();
-            }
-
-            auto feats = darth_extract_features(heapCopy, ndis, nstep, firstNN, ninserts);
-            float Rp = predictor.predict(feats);
-
-            if (Rp >= Rt)
-                break;
-        }
-    }
-
-    std::vector<Pair> tmp;
-    tmp.reserve(best.size());
-    while (!best.empty()) {
-        tmp.push_back(best.top());
-        best.pop();
-    }
-
-    std::sort(tmp.begin(), tmp.end(),
-              [](const Pair& a, const Pair& b){ return a.first < b.first; });
-
-    const int m = std::min((int)tmp.size(), k);
-    std::vector<int> out;
-    out.reserve(m);
-
-    for (int i = 0; i < m; ++i)
-        out.push_back(tmp[i].second);
-
-    return out;
-}
-
+// ====================== DARTH: query_darth ======================
 std::vector<int> HNSW_DARTH::query_darth(const std::vector<float>& q,
                                         int k,
                                         int efSearch,
                                         float Rt,
-                                        const IPredictor& predictor,
+                                        const IPredictor* predictor,
                                         int ipi,
                                         int mpi) const {
     check_dim(q);
     if (entry_id_ < 0) return {};
+    if (k <= 0) return {};
+    if (efSearch <= 0) efSearch = 1;
 
     int ep = entry_id_;
     for (int lc = maxlevel_; lc > 0; --lc) {
         ep = search_layer_greedy(q, ep, lc);
     }
 
-    // DARTH on layer 0
-    return search_layer_darth(q, ep, 0, efSearch, k, Rt, predictor, ipi, mpi);
+    // DARTH on base layer (0)
+    auto slots = search_layer_darth(q, ep, 0, efSearch, k, Rt, predictor, ipi, mpi);
+
+    // convert to external ids
+    for (int& s : slots) s = slot_to_id_[s];
+    return slots;
 }
 
-void HNSW_DARTH::search(const std::vector<std::vector<float>>& Xq,
-                        int k,
-                        int efSearch,
-                        std::vector<std::vector<float>>& D,
-                        std::vector<std::vector<int>>& I) const {
-    const int nq = (int)Xq.size();
-    D.assign(nq, std::vector<float>(k, std::numeric_limits<float>::infinity()));
-    I.assign(nq, std::vector<int>(k, -1));
 
-    for (int i = 0; i < nq; ++i) {
-        auto ids = query(Xq[i], k, efSearch);   // classic HNSW query
-        const int m = std::min((int)ids.size(), k);
-
-        for (int j = 0; j < m; ++j) {
-            I[i][j] = ids[j];
-            D[i][j] = dist(Xq[i], vectors_.at(ids[j]));
-        }
-    }
-}
-
+// ====================== DARTH: search_darth (batch) ======================
 void HNSW_DARTH::search_darth(const std::vector<std::vector<float>>& Xq,
                               int k,
                               int efSearch,
                               float Rt,
-                              const IPredictor& predictor,
+                              const IPredictor* predictor,
                               int ipi,
                               int mpi,
                               std::vector<std::vector<float>>& D,
                               std::vector<std::vector<int>>& I) const {
-    const int nq = (int)Xq.size();
-    D.assign(nq, std::vector<float>(k, std::numeric_limits<float>::infinity()));
-    I.assign(nq, std::vector<int>(k, -1));
+    D.assign(Xq.size(), std::vector<float>(k, std::numeric_limits<float>::infinity()));
+    I.assign(Xq.size(), std::vector<int>(k, -1));
 
-    for (int i = 0; i < nq; ++i) {
-        auto ids = query_darth(Xq[i], k, efSearch, Rt, predictor, ipi, mpi);
-        const int m = std::min((int)ids.size(), k);
+    for (size_t i = 0; i < Xq.size(); ++i) {
+        const auto& q = Xq[i];
+        check_dim(q);
+
+        const float* qptr = q.data();
+        float q_inv_norm = 1.0f;
+        if (metric_ == Metric::Cosine) q_inv_norm = inv_norm_ptr(qptr, dim_);
+
+        // we want both ids and distances; easiest is run DARTH returning ids, then compute D
+        auto ids = query_darth(q, k, efSearch, Rt, predictor, ipi, mpi);
+        int m = std::min((int)ids.size(), k);
 
         for (int j = 0; j < m; ++j) {
-            I[i][j] = ids[j];
-            D[i][j] = dist(Xq[i], vectors_.at(ids[j]));
+            int id = ids[j];
+            I[i][j] = id;
+
+            // id -> slot -> distance
+            auto it = id_to_slot_.find(id);
+            if (it == id_to_slot_.end()) continue;
+            int slot = it->second;
+
+            D[i][j] = dist_ptr(qptr, slot, q_inv_norm);
         }
     }
 }
-
-

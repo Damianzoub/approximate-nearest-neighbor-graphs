@@ -5,6 +5,7 @@
 #include <vector>
 #include <stdexcept>
 #include <limits>
+#include <memory>
 
 #include "hnswDarth.h"
 
@@ -15,10 +16,6 @@ static HNSW_DARTH::Metric parse_metric(const std::string& metric) {
     if (metric == "cosine") return HNSW_DARTH::Metric::Cosine;
     throw std::runtime_error("Unknown metric: " + metric);
 }
-
-struct ZeroPredictor final : public HNSW_DARTH::IPredictor {
-    float predict(const HNSW_DARTH::DarthFeatures&) const override { return 0.0f; }
-};
 
 struct PyPredictor final : public HNSW_DARTH::IPredictor {
     explicit PyPredictor(py::object fn) : fn_(std::move(fn)) {}
@@ -31,10 +28,12 @@ struct PyPredictor final : public HNSW_DARTH::IPredictor {
         d["nstep"] = f.nstep;
         d["ninserts"] = f.ninserts;
         d["firstNN"] = f.firstNN;
+
         d["closestNN"] = f.closestNN;
         d["furthestNN"] = f.furthestNN;
         d["meanNN"] = f.meanNN;
         d["varNN"] = f.varNN;
+
         d["p25NN"] = f.p25NN;
         d["p50NN"] = f.p50NN;
         d["p75NN"] = f.p75NN;
@@ -63,11 +62,11 @@ public:
         const float* ptr = static_cast<const float*>(b.ptr);
 
         py::gil_scoped_release release;
-        std::vector<float> v(dim_);
+        std::vector<float> v((size_t)dim_);
 
         for (int64_t i = 0; i < nb; ++i) {
             const float* row = ptr + i * dim_;
-            for (int d = 0; d < dim_; ++d) v[d] = row[d];
+            for (int d = 0; d < dim_; ++d) v[(size_t)d] = row[d];
             index_.insert(v);
         }
     }
@@ -85,10 +84,10 @@ public:
 
         const float* qptr = static_cast<const float*>(qbuf.ptr);
 
-        std::vector<std::vector<float>> Xqv(nq, std::vector<float>(dim_));
+        std::vector<std::vector<float>> Xqv((size_t)nq, std::vector<float>((size_t)dim_));
         for (int64_t i = 0; i < nq; ++i) {
             const float* row = qptr + i * dim_;
-            for (int d = 0; d < dim_; ++d) Xqv[i][d] = row[d];
+            for (int d = 0; d < dim_; ++d) Xqv[(size_t)i][(size_t)d] = row[d];
         }
 
         std::vector<std::vector<float>> Dv;
@@ -106,9 +105,9 @@ public:
 
         for (int64_t i = 0; i < nq; ++i) {
             for (int j = 0; j < k; ++j) {
-                Iw(i, j) = (j < (int)Iv[i].size()) ? Iv[i][j] : -1;
-                Dw(i, j) = (j < (int)Dv[i].size())
-                         ? Dv[i][j]
+                Iw(i, j) = (j < (int)Iv[(size_t)i].size()) ? Iv[(size_t)i][(size_t)j] : -1;
+                Dw(i, j) = (j < (int)Dv[(size_t)i].size())
+                         ? Dv[(size_t)i][(size_t)j]
                          : std::numeric_limits<float>::infinity();
             }
         }
@@ -133,19 +132,18 @@ public:
 
         const float* qptr = static_cast<const float*>(qbuf.ptr);
 
-        std::vector<std::vector<float>> Xqv(nq, std::vector<float>(dim_));
+        std::vector<std::vector<float>> Xqv((size_t)nq, std::vector<float>((size_t)dim_));
         for (int64_t i = 0; i < nq; ++i) {
             const float* row = qptr + i * dim_;
-            for (int d = 0; d < dim_; ++d) Xqv[i][d] = row[d];
+            for (int d = 0; d < dim_; ++d) Xqv[(size_t)i][(size_t)d] = row[d];
         }
 
         std::vector<std::vector<float>> Dv;
         std::vector<std::vector<int>>   Iv;
 
-        ZeroPredictor zero;
         std::unique_ptr<PyPredictor> pyPred;
+        const HNSW_DARTH::IPredictor* predPtr = nullptr;
 
-        const HNSW_DARTH::IPredictor* predPtr = &zero;
         if (!predictor.is_none()) {
             pyPred = std::make_unique<PyPredictor>(predictor);
             predPtr = pyPred.get();
@@ -153,7 +151,7 @@ public:
 
         {
             py::gil_scoped_release release;
-            index_.search_darth(Xqv, k, efSearch, Rt, *predPtr, ipi, mpi, Dv, Iv);
+            index_.search_darth(Xqv, k, efSearch, Rt, predPtr, ipi, mpi, Dv, Iv);
         }
 
         py::array_t<int>   I({nq, (int64_t)k});
@@ -163,9 +161,9 @@ public:
 
         for (int64_t i = 0; i < nq; ++i) {
             for (int j = 0; j < k; ++j) {
-                Iw(i, j) = (j < (int)Iv[i].size()) ? Iv[i][j] : -1;
-                Dw(i, j) = (j < (int)Dv[i].size())
-                         ? Dv[i][j]
+                Iw(i, j) = (j < (int)Iv[(size_t)i].size()) ? Iv[(size_t)i][(size_t)j] : -1;
+                Dw(i, j) = (j < (int)Dv[(size_t)i].size())
+                         ? Dv[(size_t)i][(size_t)j]
                          : std::numeric_limits<float>::infinity();
             }
         }
@@ -173,7 +171,7 @@ public:
         return {D, I};
     }
 
-    // old names (compat)
+    // Compat aliases (kept from your old code)
     std::pair<py::array_t<float>, py::array_t<int>> search_layer(
         py::array_t<float, py::array::c_style | py::array::forcecast> xq,
         int k,
@@ -207,7 +205,7 @@ PYBIND11_MODULE(hnswDarth_cpp, m) {
              py::arg("Rt")=0.95f,
              py::arg("predictor")=py::none(),
              py::arg("ipi")=200,
-             py::arg("mpi")=20)
+             py::arg("mpi")=0)
         .def("search_layer", &HNSWDarthIndex::search_layer,
              py::arg("xq"), py::arg("k"), py::arg("efSearch"))
         .def("search_layer_darth", &HNSWDarthIndex::search_layer_darth,
@@ -215,5 +213,5 @@ PYBIND11_MODULE(hnswDarth_cpp, m) {
              py::arg("Rt")=0.95f,
              py::arg("predictor")=py::none(),
              py::arg("ipi")=200,
-             py::arg("mpi")=20);
+             py::arg("mpi")=0);
 }
