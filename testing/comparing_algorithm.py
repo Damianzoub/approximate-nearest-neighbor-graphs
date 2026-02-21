@@ -5,7 +5,7 @@ import sys
 from pathlib import Path 
 
 from hnsw_construction import HNSW_NEW
-from hsnw_constructionDARTH import HNSW_DARTH
+from hsnw_constructionDARTH import HNSW_DARTH, DummyPredictor
 CPP = Path(__file__).parent.parent / 'hnsw_cpp' / 'src' / 'build'
 sys.path.insert(0, str(CPP))
 import hnsw_cpp
@@ -28,10 +28,11 @@ def build_hnsw_darth(Xb, M=16, efC=200, metric='l2'):
     return index
 
 def hnsw_darth_search_fn(index, efS, Rt=0.95, ipi=200, mpi=20, predictor=None):
+    if predictor is None:
+            predictor = DummyPredictor()
     def _search(Xq, k):
         Xq = np.asarray(Xq, dtype=np.float32, order='C')
-
-        D, I = index.search(
+        D, I = index.search_darth(
             Xq,
             k=k,
             efSearch=efS,
