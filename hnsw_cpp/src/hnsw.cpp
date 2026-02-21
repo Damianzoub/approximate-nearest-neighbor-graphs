@@ -140,16 +140,18 @@ std::vector<int> HNSW_NEW::search_layer_beam(const std::vector<float>& q, int ep
 
         for (int nb : neigh) {
             if (is_visited(nb)) continue;
-            mark_visited(nb);
+            
 
             float d = dist_ptr(qptr, nb,q_inv_norm);
 
             if ((int)W.size() < ef) {
+                mark_visited(nb);
                 heap_push(C, Item(d, nb), min_cmp);
                 heap_push(W, Item(d, nb), max_cmp);
             } else {
-                worstDist = W.front().first;
+                float worstDist = W.front().first;
                 if (d < worstDist) {
+                    mark_visited(nb);
                     heap_push(C, Item(d, nb), min_cmp);
 
                     // replace worst in W
@@ -212,7 +214,10 @@ std::vector<int> HNSW_NEW::select_neighbors_heuristic_paper_slot(
 
     std::unordered_set<int> Wset;
     Wset.reserve(candidates.size()*3 + 1);
-    for (int id : candidates) Wset.insert(id);
+    for (int id : candidates) { 
+        if (id == qslot) continue; 
+        Wset.insert(id);
+    }
 
     if (extendCandidates) {
         std::vector<int> base(Wset.begin(), Wset.end());
