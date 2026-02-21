@@ -73,8 +73,12 @@ class HNSW_NEW:
                 self.layers[lc][node_id] = set()
             #θα το σκεφτω μετα το current_entryPoint αν ειναι σωστο
             W = self._search_layer(vec,ep,lc,self.efConstruction)
-            neighbors = self.select_neighbors_heuristic(vec,W,lc,self.M if lc > 0 else self.M0)
-
+            neighbors = self._select_neighbors_heuristic_paper(
+                        vec, W, layer=lc,
+                        M=(self.M if lc > 0 else self.M0),
+                        extend_candidates=True,
+                        keep_pruned_connections=False
+                         )
             for nb in neighbors:
                 if nb not in self.layers[lc]:
                     self.layers[lc][nb] = set()
@@ -112,43 +116,57 @@ class HNSW_NEW:
                 break
         return best        
     #beam_search   
-    def _search_layer(self,vec,ep_id:int,layer:int,ef:int):
-        if layer < 0 or layer >= len(self.layers) or len(self.layers[layer]) ==0:
+    def _search_layer(self, vec, ep_id: int, layer: int, ef: int):
+        if layer < 0 or layer >= len(self.layers) or len(self.layers[layer]) == 0:
             return []
         if ep_id not in self.vectors:
             return []
+        if ef <= 0:
+            return []
 
         visited = set()
+
+        # C: min-heap (distance, id)
         C = []
+        # W: max-heap via (-distance, id)
         W = []
-        dist_ep = self.dist(vec,self.vectors[ep_id])
+
+        dist_ep = self.dist(vec, self.vectors[ep_id])
         visited.add(ep_id)
-        heapq.heappush(C,(dist_ep,ep_id))
-        heapq.heappush(W,(-dist_ep,ep_id)) #max-heap
+        heapq.heappush(C, (dist_ep, ep_id))
+        heapq.heappush(W, (-dist_ep, ep_id))
 
         while C:
             dist_c, c_id = heapq.heappop(C)
-            worst_dist = -W[0][0]
+
+            worst_dist = -W[0][0]  # farthest among W (because max-heap with -dist)
             if dist_c > worst_dist:
                 break
-                
-            for nb in self.layers[layer].get(c_id,set()):
+
+            for nb in self.layers[layer].get(c_id, set()):
                 if nb in visited:
                     continue
-                d = self.dist(vec,self.vectors[nb])
+
+                d = self.dist(vec, self.vectors[nb])
+
                 if len(W) < ef:
+                    # accept
                     visited.add(nb)
-                    heapq.heappush(C,(d,nb))
-                    heapq.heappush(W,(-d,nb))
+                    heapq.heappush(C, (d, nb))
+                    heapq.heappush(W, (-d, nb))
                 else:
                     worst_dist = -W[0][0]
                     if d < worst_dist:
+                        # accept
                         visited.add(nb)
-                        heapq.heappush(C,(d,nb))
-                        heapq.heapreplace(W,(-d,nb))
-        result = [(-neg_d,node_id) for (neg_d,node_id) in W]
+                        heapq.heappush(C, (d, nb))
+                        # replace worst in W
+                        heapq.heapreplace(W, (-d, nb))
+
+        # return W sorted ascending by distance
+        result = [(-neg_d, node_id) for (neg_d, node_id) in W]
         result.sort(key=lambda x: x[0])
-        return [node_id for (dist,node_id) in result]
+        return [node_id for (_, node_id) in result]
     
     #here we check about how many nodes are going to become neighbors from the select_layers candidates 
     def _select_neighbors_simple(self,vec,candidates,layer:int,Mmax:int):
@@ -164,69 +182,54 @@ class HNSW_NEW:
         selected = [nb for (d,nb) in dist_list[:Mmax]]
         return selected
     
-    def _select_neighbors_heuristic_paper(self,vec,candidates,layer:int,M:int,extend_candidates:bool=True,keep_pruned_connections:bool=False):
+    def _select_neighbors_heuristic_paper(self,q_vec,candidates,layer: int,M: int,extend_candidates: bool = True,keep_pruned_connections: bool = False):
+        if M <= 0:
+            return []
+
+        # unique candidates
         W_set = set(candidates)
 
+        # extend candidates (paper option)
         if extend_candidates:
             base = list(W_set)
             for e in base:
-                for eadj in self.layers[layer].get(e,set()):
-                    W_set.add(eadj)
-            
-        cand = []
-        for e in W_set:
-            d_qe = self.dist(vec,self.vectors[e])
-            cand.append((d_qe,e))
+                if e not in self.layers[layer]:
+                    continue
+                for adj in self.layers[layer].get(e, set()):
+                    W_set.add(adj)
+
+        # sort candidates by distance to q_vec
+        cand = [(self.dist(q_vec, self.vectors[e]), e) for e in W_set]
         cand.sort(key=lambda x: x[0])
 
-        R = []
-        discarded = []
-        for d_e,e in cand:
+        R = []          # selected ids
+        discarded = []  # (d(q,e), e)
+
+        for d_qe, e in cand:
             good = True
             for r in R:
-                if self.dist(self.vectors[e],self.vectors[r]) < d_e:
+                # diversification rule
+                if self.dist(self.vectors[e], self.vectors[r]) < d_qe:
                     good = False
                     break
-            
+
             if good:
                 R.append(e)
                 if len(R) == M:
                     break
             else:
-                discarded.append((d_e,e))
-        
+                discarded.append((d_qe, e))
+
         if keep_pruned_connections and len(R) < M:
             discarded.sort(key=lambda x: x[0])
-            for _,e in discarded:
+            for _, e in discarded:
                 if e not in R:
                     R.append(e)
                     if len(R) == M:
-                        break 
+                        break
+
         return R
          
-
-    def select_neighbors_heuristic(self,vec,candidates,layer:int,Mmax:int): #a little bit different from mine
-        unique_candidates = list(dict.fromkeys(candidates))
-        cand_with_dist = []
-        for nb in unique_candidates:
-            d = self.dist(vec,self.vectors[nb])
-            cand_with_dist.append((d,nb))
-        
-        cand_with_dist.sort(key=lambda x: x[0])
-        R =[]
-        for d_e,e in cand_with_dist:
-            if len(R)>=Mmax:
-                break
-            good = True 
-            for d_r,r in R:
-                d_er = self.dist(self.vectors[e],self.vectors[r])
-                if d_er < d_e:
-                    good =False 
-                    break 
-                    
-            if good:
-                R.append((d_e,e))
-        return [e for (d_e,e) in R]
     #search
     def _query(self,q_vec,K,numSearch): #algorithms 5 k-nn search
         if self.entry_id is None:
@@ -293,6 +296,7 @@ class HNSW_NEW:
             return neigh_set
         
         neighbors = list(neigh_set)
+        neighbors = [x for x in neighbors if x != node_id]
         q_vec = self.vectors[node_id]
 
         if getattr(self,"use_heuristic",False):
