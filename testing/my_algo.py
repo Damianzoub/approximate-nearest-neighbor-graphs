@@ -35,15 +35,28 @@ if __name__ == "__main__":
     k = 10
 
     print("\nBuilding HNSW_NEW...")
-    idx = build_hnsw_DARTH_cpp(Xb, M=M, efC=efC)
+    #idx_pip = build_hnsw_pip(Xb, M=16, efC=200, metric='l2', pip_gamma=95.0, pip_delta=20)
+    #search_pip = hnsw_pip_search_fn(idx_pip, efS=100)
+    #D, I = search_pip(Xq, k=10)
 
-    search_fn = hnsw_darth_cpp_search_fn(idx, efS)
+    idx_adaef = build_hnsw_adaef(
+        Xb,
+        M=16,
+        efC=200,
+        metric='cosine',
+        offline_k=10,
+        offline_target_recall=0.95,
+        offline_ef_values=[50, 75, 100, 150, 200, 300, 400]
+    )
+
+    search_adaef = hnsw_adaef_search_fn(idx_adaef, target_recall=0.95)
+   
 
     # -------------------------------------------------
     # Run search
     # -------------------------------------------------
     print("Running search...")
-    D, I = search_fn(Xq, k)
+    D, I = search_adaef(Xq, k)
 
     print("Output shapes:")
     print("D:", D.shape, D.dtype)
