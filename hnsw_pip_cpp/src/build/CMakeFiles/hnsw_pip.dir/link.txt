@@ -1,0 +1,1 @@
+/usr/bin/c++ -O3 -DNDEBUG -march=native -ffast-math -O3 -DNDEBUG -bundle -Wl,-headerpad_max_install_names -Xlinker -undefined -Xlinker dynamic_lookup -flto -o hnsw_pip.cpython-311-darwin.so CMakeFiles/hnsw_pip.dir/bindings.cpp.o CMakeFiles/hnsw_pip.dir/hnsw_pip.cpp.o
