@@ -1,0 +1,8 @@
+{
+	"InstallScripts" : 
+	[
+		"/Users/Damian/approximate-nearest-neighbor-graphs/hnsw_pip_cpp/src/build/cmake_install.cmake",
+		"/Users/Damian/approximate-nearest-neighbor-graphs/hnsw_pip_cpp/src/build/_deps/pybind11-build/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
