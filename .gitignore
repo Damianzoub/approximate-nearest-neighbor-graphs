@@ -3,14 +3,13 @@ __pycache__/
 *.py[codz]
 *$py.class
 
-# C extensions
-*.so
+
 
 venv
 /Datasets
 # Distribution / packaging
 .Python
-build/
+
 develop-eggs/
 dist/
 downloads/
@@ -34,6 +33,7 @@ MANIFEST
 *.manifest
 *.spec
 
+*.so
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
