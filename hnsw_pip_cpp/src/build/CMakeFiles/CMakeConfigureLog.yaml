@@ -1,0 +1,1996 @@
+
+---
+events:
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeDetermineSystem.cmake:12 (find_program)"
+      - "CMakeLists.txt:2 (project)"
+    mode: "program"
+    variable: "CMAKE_UNAME"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "uname"
+    candidate_directories:
+      - "/Users/Damian/Desktop/google-cloud-sdk/bin/"
+      - "/Users/Damian/.opencode/bin/"
+      - "/Users/Damian/flutter/bin/"
+      - "/Users/Damian/.nvm/versions/node/v24.12.0/bin/"
+      - "/Users/Damian/.rd/bin/"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin/"
+      - "/usr/local/Caskroom/miniconda/base/condabin/"
+      - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin/"
+      - "/Users/Damian/Desktop/jason-3.3.0/bin/"
+      - "/opt/local/bin/"
+      - "/opt/local/sbin/"
+      - "/Users/Damian/Desktop/jason-bin-3.3.0/bin/"
+      - "/usr/local/bin/"
+      - "/usr/bin/"
+      - "/bin/"
+      - "/usr/sbin/"
+      - "/sbin/"
+      - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts/"
+      - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand/"
+      - "/Users/Damian/platform-tools/"
+      - "/Users/Damian/Library/Android/sdk/platform-tools/"
+      - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin/"
+      - "/Users/Damian/Library/Android/sdk/emulator/"
+      - "/Users/Damian/.pub-cache/bin/"
+    searched_directories:
+      - "/Users/Damian/Desktop/google-cloud-sdk/bin/uname"
+      - "/Users/Damian/.opencode/bin/uname"
+      - "/Users/Damian/flutter/bin/uname"
+      - "/Users/Damian/.nvm/versions/node/v24.12.0/bin/uname"
+      - "/Users/Damian/.rd/bin/uname"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin/uname"
+      - "/usr/local/Caskroom/miniconda/base/condabin/uname"
+      - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin/uname"
+      - "/Users/Damian/Desktop/jason-3.3.0/bin/uname"
+      - "/opt/local/bin/uname"
+      - "/opt/local/sbin/uname"
+      - "/Users/Damian/Desktop/jason-bin-3.3.0/bin/uname"
+      - "/usr/local/bin/uname"
+    found: "/usr/bin/uname"
+    search_context:
+      ENV{PATH}:
+        - "/Users/Damian/Desktop/google-cloud-sdk/bin"
+        - "/Users/Damian/.opencode/bin"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/.nvm/versions/node/v24.12.0/bin"
+        - "/Users/Damian/.rd/bin"
+        - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin"
+        - "/usr/local/Caskroom/miniconda/base/condabin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-3.3.0/bin"
+        - "/opt/local/bin"
+        - "/opt/local/sbin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-bin-3.3.0/bin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts"
+        - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin"
+        - "/Users/Damian/Library/Android/sdk/emulator"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/.pub-cache/bin"
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeDetermineSystem.cmake:212 (message)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      The system is: Darwin - 21.6.0 - x86_64
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeUnixFindMake.cmake:5 (find_program)"
+      - "CMakeLists.txt:2 (project)"
+    mode: "program"
+    variable: "CMAKE_MAKE_PROGRAM"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "gmake"
+      - "make"
+      - "smake"
+    candidate_directories:
+      - "/Users/Damian/Desktop/google-cloud-sdk/bin/"
+      - "/Users/Damian/.opencode/bin/"
+      - "/Users/Damian/flutter/bin/"
+      - "/Users/Damian/.nvm/versions/node/v24.12.0/bin/"
+      - "/Users/Damian/.rd/bin/"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin/"
+      - "/usr/local/Caskroom/miniconda/base/condabin/"
+      - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin/"
+      - "/Users/Damian/Desktop/jason-3.3.0/bin/"
+      - "/opt/local/bin/"
+      - "/opt/local/sbin/"
+      - "/Users/Damian/Desktop/jason-bin-3.3.0/bin/"
+      - "/usr/local/bin/"
+      - "/usr/bin/"
+      - "/bin/"
+      - "/usr/sbin/"
+      - "/sbin/"
+      - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts/"
+      - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand/"
+      - "/Users/Damian/platform-tools/"
+      - "/Users/Damian/Library/Android/sdk/platform-tools/"
+      - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin/"
+      - "/Users/Damian/Library/Android/sdk/emulator/"
+      - "/Users/Damian/.pub-cache/bin/"
+    searched_directories:
+      - "/Users/Damian/Desktop/google-cloud-sdk/bin/gmake"
+      - "/Users/Damian/.opencode/bin/gmake"
+      - "/Users/Damian/flutter/bin/gmake"
+      - "/Users/Damian/.nvm/versions/node/v24.12.0/bin/gmake"
+      - "/Users/Damian/.rd/bin/gmake"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin/gmake"
+      - "/usr/local/Caskroom/miniconda/base/condabin/gmake"
+      - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin/gmake"
+      - "/Users/Damian/Desktop/jason-3.3.0/bin/gmake"
+      - "/opt/local/bin/gmake"
+      - "/opt/local/sbin/gmake"
+      - "/Users/Damian/Desktop/jason-bin-3.3.0/bin/gmake"
+      - "/usr/local/bin/gmake"
+      - "/usr/bin/gmake"
+      - "/bin/gmake"
+      - "/usr/sbin/gmake"
+      - "/sbin/gmake"
+      - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts/gmake"
+      - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand/gmake"
+      - "/Users/Damian/platform-tools/gmake"
+      - "/Users/Damian/Library/Android/sdk/platform-tools/gmake"
+      - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin/gmake"
+      - "/Users/Damian/Library/Android/sdk/emulator/gmake"
+      - "/Users/Damian/.pub-cache/bin/gmake"
+      - "/Users/Damian/Desktop/google-cloud-sdk/bin/make"
+      - "/Users/Damian/.opencode/bin/make"
+      - "/Users/Damian/flutter/bin/make"
+      - "/Users/Damian/.nvm/versions/node/v24.12.0/bin/make"
+      - "/Users/Damian/.rd/bin/make"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin/make"
+      - "/usr/local/Caskroom/miniconda/base/condabin/make"
+      - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin/make"
+      - "/Users/Damian/Desktop/jason-3.3.0/bin/make"
+      - "/opt/local/bin/make"
+      - "/opt/local/sbin/make"
+      - "/Users/Damian/Desktop/jason-bin-3.3.0/bin/make"
+      - "/usr/local/bin/make"
+    found: "/usr/bin/make"
+    search_context:
+      ENV{PATH}:
+        - "/Users/Damian/Desktop/google-cloud-sdk/bin"
+        - "/Users/Damian/.opencode/bin"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/.nvm/versions/node/v24.12.0/bin"
+        - "/Users/Damian/.rd/bin"
+        - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin"
+        - "/usr/local/Caskroom/miniconda/base/condabin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-3.3.0/bin"
+        - "/opt/local/bin"
+        - "/opt/local/sbin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-bin-3.3.0/bin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts"
+        - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin"
+        - "/Users/Damian/Library/Android/sdk/emulator"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/.pub-cache/bin"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeDetermineCompiler.cmake:73 (find_program)"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeDetermineCXXCompiler.cmake:69 (_cmake_find_compiler)"
+      - "CMakeLists.txt:2 (project)"
+    mode: "program"
+    variable: "CMAKE_CXX_COMPILER"
+    description: "CXX compiler"
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "c++"
+      - "g++"
+      - "cl"
+      - "bcc"
+      - "icpx"
+      - "icx"
+      - "clang++"
+    candidate_directories:
+      - "/Users/Damian/Desktop/google-cloud-sdk/bin/"
+      - "/Users/Damian/.opencode/bin/"
+      - "/Users/Damian/flutter/bin/"
+      - "/Users/Damian/.nvm/versions/node/v24.12.0/bin/"
+      - "/Users/Damian/.rd/bin/"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin/"
+      - "/usr/local/Caskroom/miniconda/base/condabin/"
+      - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin/"
+      - "/Users/Damian/Desktop/jason-3.3.0/bin/"
+      - "/opt/local/bin/"
+      - "/opt/local/sbin/"
+      - "/Users/Damian/Desktop/jason-bin-3.3.0/bin/"
+      - "/usr/local/bin/"
+      - "/usr/bin/"
+      - "/bin/"
+      - "/usr/sbin/"
+      - "/sbin/"
+      - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts/"
+      - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand/"
+      - "/Users/Damian/platform-tools/"
+      - "/Users/Damian/Library/Android/sdk/platform-tools/"
+      - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin/"
+      - "/Users/Damian/Library/Android/sdk/emulator/"
+      - "/Users/Damian/.pub-cache/bin/"
+    searched_directories:
+      - "/Users/Damian/Desktop/google-cloud-sdk/bin/c++"
+      - "/Users/Damian/.opencode/bin/c++"
+      - "/Users/Damian/flutter/bin/c++"
+      - "/Users/Damian/.nvm/versions/node/v24.12.0/bin/c++"
+      - "/Users/Damian/.rd/bin/c++"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin/c++"
+      - "/usr/local/Caskroom/miniconda/base/condabin/c++"
+      - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin/c++"
+      - "/Users/Damian/Desktop/jason-3.3.0/bin/c++"
+      - "/opt/local/bin/c++"
+      - "/opt/local/sbin/c++"
+      - "/Users/Damian/Desktop/jason-bin-3.3.0/bin/c++"
+      - "/usr/local/bin/c++"
+    found: "/usr/bin/c++"
+    search_context:
+      ENV{PATH}:
+        - "/Users/Damian/Desktop/google-cloud-sdk/bin"
+        - "/Users/Damian/.opencode/bin"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/.nvm/versions/node/v24.12.0/bin"
+        - "/Users/Damian/.rd/bin"
+        - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin"
+        - "/usr/local/Caskroom/miniconda/base/condabin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-3.3.0/bin"
+        - "/opt/local/bin"
+        - "/opt/local/sbin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-bin-3.3.0/bin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts"
+        - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin"
+        - "/Users/Damian/Library/Android/sdk/emulator"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/.pub-cache/bin"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeDetermineCompilerId.cmake:462 (find_file)"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeDetermineCompilerId.cmake:500 (CMAKE_DETERMINE_COMPILER_ID_WRITE)"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeDetermineCompilerId.cmake:8 (CMAKE_DETERMINE_COMPILER_ID_BUILD)"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeDetermineCXXCompiler.cmake:125 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:2 (project)"
+    mode: "file"
+    variable: "src_in"
+    description: "Path to a file."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "CMakeCXXCompilerId.cpp.in"
+    candidate_directories:
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/"
+    found: "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeCXXCompilerId.cpp.in"
+    search_context:
+      ENV{PATH}:
+        - "/Users/Damian/Desktop/google-cloud-sdk/bin"
+        - "/Users/Damian/.opencode/bin"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/.nvm/versions/node/v24.12.0/bin"
+        - "/Users/Damian/.rd/bin"
+        - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin"
+        - "/usr/local/Caskroom/miniconda/base/condabin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-3.3.0/bin"
+        - "/opt/local/bin"
+        - "/opt/local/sbin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-bin-3.3.0/bin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts"
+        - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin"
+        - "/Users/Damian/Library/Android/sdk/emulator"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/.pub-cache/bin"
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeDetermineCXXCompiler.cmake:125 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
+      Compiler: /usr/bin/c++ 
+      Build flags: -O3;-DNDEBUG;-march=native;-ffast-math
+      Id flags:  
+      
+      The output was:
+      0
+      
+      
+      Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "a.out"
+      
+      The CXX compiler identification is AppleClang, found in:
+        /Users/Damian/approximate-nearest-neighbor-graphs/hnsw_pip_cpp/src/build/CMakeFiles/4.2.1/CompilerIdCXX/a.out
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeDetermineCompilerId.cmake:290 (message)"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeDetermineCXXCompiler.cmake:125 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      Detecting CXX compiler apple sysroot: "/usr/bin/c++" "-O3" "-DNDEBUG" "-march=native" "-ffast-math" "-E" "apple-sdk.cpp"
+        # 1 "apple-sdk.cpp"
+        # 1 "<built-in>" 1
+        # 1 "<built-in>" 3
+        # 407 "<built-in>" 3
+        # 1 "<command line>" 1
+        # 1 "<built-in>" 2
+        # 1 "apple-sdk.cpp" 2
+        # 1 "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/AvailabilityMacros.h" 1 3 4
+        # 242 "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/AvailabilityMacros.h" 3 4
+        # 1 "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/Availability.h" 1 3 4
+        # 165 "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/Availability.h" 3 4
+        # 1 "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/AvailabilityVersions.h" 1 3 4
+        # 166 "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/Availability.h" 2 3 4
+        # 1 "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/AvailabilityInternal.h" 1 3 4
+        # 167 "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/Availability.h" 2 3 4
+        # 243 "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/AvailabilityMacros.h" 2 3 4
+        # 2 "apple-sdk.cpp" 2
+        
+        
+      Found apple sysroot: /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeDetermineCXXCompiler.cmake:206 (include)"
+      - "CMakeLists.txt:2 (project)"
+    mode: "program"
+    variable: "CMAKE_AR"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "ar"
+    candidate_directories:
+      - "/usr/bin/"
+      - "/Users/Damian/Desktop/google-cloud-sdk/bin/"
+      - "/Users/Damian/.opencode/bin/"
+      - "/Users/Damian/flutter/bin/"
+      - "/Users/Damian/.nvm/versions/node/v24.12.0/bin/"
+      - "/Users/Damian/.rd/bin/"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin/"
+      - "/usr/local/Caskroom/miniconda/base/condabin/"
+      - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin/"
+      - "/Users/Damian/Desktop/jason-3.3.0/bin/"
+      - "/opt/local/bin/"
+      - "/opt/local/sbin/"
+      - "/Users/Damian/Desktop/jason-bin-3.3.0/bin/"
+      - "/usr/local/bin/"
+      - "/bin/"
+      - "/usr/sbin/"
+      - "/sbin/"
+      - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts/"
+      - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand/"
+      - "/Users/Damian/platform-tools/"
+      - "/Users/Damian/Library/Android/sdk/platform-tools/"
+      - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin/"
+      - "/Users/Damian/Library/Android/sdk/emulator/"
+      - "/Users/Damian/.pub-cache/bin/"
+    found: "/usr/bin/ar"
+    search_context:
+      ENV{PATH}:
+        - "/Users/Damian/Desktop/google-cloud-sdk/bin"
+        - "/Users/Damian/.opencode/bin"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/.nvm/versions/node/v24.12.0/bin"
+        - "/Users/Damian/.rd/bin"
+        - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin"
+        - "/usr/local/Caskroom/miniconda/base/condabin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-3.3.0/bin"
+        - "/opt/local/bin"
+        - "/opt/local/sbin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-bin-3.3.0/bin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts"
+        - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin"
+        - "/Users/Damian/Library/Android/sdk/emulator"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/.pub-cache/bin"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeDetermineCXXCompiler.cmake:206 (include)"
+      - "CMakeLists.txt:2 (project)"
+    mode: "program"
+    variable: "CMAKE_RANLIB"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "ranlib"
+    candidate_directories:
+      - "/usr/bin/"
+      - "/Users/Damian/Desktop/google-cloud-sdk/bin/"
+      - "/Users/Damian/.opencode/bin/"
+      - "/Users/Damian/flutter/bin/"
+      - "/Users/Damian/.nvm/versions/node/v24.12.0/bin/"
+      - "/Users/Damian/.rd/bin/"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin/"
+      - "/usr/local/Caskroom/miniconda/base/condabin/"
+      - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin/"
+      - "/Users/Damian/Desktop/jason-3.3.0/bin/"
+      - "/opt/local/bin/"
+      - "/opt/local/sbin/"
+      - "/Users/Damian/Desktop/jason-bin-3.3.0/bin/"
+      - "/usr/local/bin/"
+      - "/bin/"
+      - "/usr/sbin/"
+      - "/sbin/"
+      - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts/"
+      - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand/"
+      - "/Users/Damian/platform-tools/"
+      - "/Users/Damian/Library/Android/sdk/platform-tools/"
+      - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin/"
+      - "/Users/Damian/Library/Android/sdk/emulator/"
+      - "/Users/Damian/.pub-cache/bin/"
+    found: "/usr/bin/ranlib"
+    search_context:
+      ENV{PATH}:
+        - "/Users/Damian/Desktop/google-cloud-sdk/bin"
+        - "/Users/Damian/.opencode/bin"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/.nvm/versions/node/v24.12.0/bin"
+        - "/Users/Damian/.rd/bin"
+        - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin"
+        - "/usr/local/Caskroom/miniconda/base/condabin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-3.3.0/bin"
+        - "/opt/local/bin"
+        - "/opt/local/sbin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-bin-3.3.0/bin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts"
+        - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin"
+        - "/Users/Damian/Library/Android/sdk/emulator"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/.pub-cache/bin"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeDetermineCXXCompiler.cmake:206 (include)"
+      - "CMakeLists.txt:2 (project)"
+    mode: "program"
+    variable: "CMAKE_STRIP"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "strip"
+    candidate_directories:
+      - "/usr/bin/"
+      - "/Users/Damian/Desktop/google-cloud-sdk/bin/"
+      - "/Users/Damian/.opencode/bin/"
+      - "/Users/Damian/flutter/bin/"
+      - "/Users/Damian/.nvm/versions/node/v24.12.0/bin/"
+      - "/Users/Damian/.rd/bin/"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin/"
+      - "/usr/local/Caskroom/miniconda/base/condabin/"
+      - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin/"
+      - "/Users/Damian/Desktop/jason-3.3.0/bin/"
+      - "/opt/local/bin/"
+      - "/opt/local/sbin/"
+      - "/Users/Damian/Desktop/jason-bin-3.3.0/bin/"
+      - "/usr/local/bin/"
+      - "/bin/"
+      - "/usr/sbin/"
+      - "/sbin/"
+      - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts/"
+      - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand/"
+      - "/Users/Damian/platform-tools/"
+      - "/Users/Damian/Library/Android/sdk/platform-tools/"
+      - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin/"
+      - "/Users/Damian/Library/Android/sdk/emulator/"
+      - "/Users/Damian/.pub-cache/bin/"
+    found: "/usr/bin/strip"
+    search_context:
+      ENV{PATH}:
+        - "/Users/Damian/Desktop/google-cloud-sdk/bin"
+        - "/Users/Damian/.opencode/bin"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/.nvm/versions/node/v24.12.0/bin"
+        - "/Users/Damian/.rd/bin"
+        - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin"
+        - "/usr/local/Caskroom/miniconda/base/condabin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-3.3.0/bin"
+        - "/opt/local/bin"
+        - "/opt/local/sbin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-bin-3.3.0/bin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts"
+        - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin"
+        - "/Users/Damian/Library/Android/sdk/emulator"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/.pub-cache/bin"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeDetermineCXXCompiler.cmake:206 (include)"
+      - "CMakeLists.txt:2 (project)"
+    mode: "program"
+    variable: "CMAKE_LINKER"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "ld"
+    candidate_directories:
+      - "/usr/bin/"
+      - "/Users/Damian/Desktop/google-cloud-sdk/bin/"
+      - "/Users/Damian/.opencode/bin/"
+      - "/Users/Damian/flutter/bin/"
+      - "/Users/Damian/.nvm/versions/node/v24.12.0/bin/"
+      - "/Users/Damian/.rd/bin/"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin/"
+      - "/usr/local/Caskroom/miniconda/base/condabin/"
+      - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin/"
+      - "/Users/Damian/Desktop/jason-3.3.0/bin/"
+      - "/opt/local/bin/"
+      - "/opt/local/sbin/"
+      - "/Users/Damian/Desktop/jason-bin-3.3.0/bin/"
+      - "/usr/local/bin/"
+      - "/bin/"
+      - "/usr/sbin/"
+      - "/sbin/"
+      - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts/"
+      - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand/"
+      - "/Users/Damian/platform-tools/"
+      - "/Users/Damian/Library/Android/sdk/platform-tools/"
+      - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin/"
+      - "/Users/Damian/Library/Android/sdk/emulator/"
+      - "/Users/Damian/.pub-cache/bin/"
+    found: "/usr/bin/ld"
+    search_context:
+      ENV{PATH}:
+        - "/Users/Damian/Desktop/google-cloud-sdk/bin"
+        - "/Users/Damian/.opencode/bin"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/.nvm/versions/node/v24.12.0/bin"
+        - "/Users/Damian/.rd/bin"
+        - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin"
+        - "/usr/local/Caskroom/miniconda/base/condabin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-3.3.0/bin"
+        - "/opt/local/bin"
+        - "/opt/local/sbin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-bin-3.3.0/bin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts"
+        - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin"
+        - "/Users/Damian/Library/Android/sdk/emulator"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/.pub-cache/bin"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeDetermineCXXCompiler.cmake:206 (include)"
+      - "CMakeLists.txt:2 (project)"
+    mode: "program"
+    variable: "CMAKE_NM"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "nm"
+    candidate_directories:
+      - "/usr/bin/"
+      - "/Users/Damian/Desktop/google-cloud-sdk/bin/"
+      - "/Users/Damian/.opencode/bin/"
+      - "/Users/Damian/flutter/bin/"
+      - "/Users/Damian/.nvm/versions/node/v24.12.0/bin/"
+      - "/Users/Damian/.rd/bin/"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin/"
+      - "/usr/local/Caskroom/miniconda/base/condabin/"
+      - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin/"
+      - "/Users/Damian/Desktop/jason-3.3.0/bin/"
+      - "/opt/local/bin/"
+      - "/opt/local/sbin/"
+      - "/Users/Damian/Desktop/jason-bin-3.3.0/bin/"
+      - "/usr/local/bin/"
+      - "/bin/"
+      - "/usr/sbin/"
+      - "/sbin/"
+      - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts/"
+      - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand/"
+      - "/Users/Damian/platform-tools/"
+      - "/Users/Damian/Library/Android/sdk/platform-tools/"
+      - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin/"
+      - "/Users/Damian/Library/Android/sdk/emulator/"
+      - "/Users/Damian/.pub-cache/bin/"
+    found: "/usr/bin/nm"
+    search_context:
+      ENV{PATH}:
+        - "/Users/Damian/Desktop/google-cloud-sdk/bin"
+        - "/Users/Damian/.opencode/bin"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/.nvm/versions/node/v24.12.0/bin"
+        - "/Users/Damian/.rd/bin"
+        - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin"
+        - "/usr/local/Caskroom/miniconda/base/condabin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-3.3.0/bin"
+        - "/opt/local/bin"
+        - "/opt/local/sbin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-bin-3.3.0/bin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts"
+        - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin"
+        - "/Users/Damian/Library/Android/sdk/emulator"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/.pub-cache/bin"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeDetermineCXXCompiler.cmake:206 (include)"
+      - "CMakeLists.txt:2 (project)"
+    mode: "program"
+    variable: "CMAKE_OBJDUMP"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "objdump"
+    candidate_directories:
+      - "/usr/bin/"
+      - "/Users/Damian/Desktop/google-cloud-sdk/bin/"
+      - "/Users/Damian/.opencode/bin/"
+      - "/Users/Damian/flutter/bin/"
+      - "/Users/Damian/.nvm/versions/node/v24.12.0/bin/"
+      - "/Users/Damian/.rd/bin/"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin/"
+      - "/usr/local/Caskroom/miniconda/base/condabin/"
+      - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin/"
+      - "/Users/Damian/Desktop/jason-3.3.0/bin/"
+      - "/opt/local/bin/"
+      - "/opt/local/sbin/"
+      - "/Users/Damian/Desktop/jason-bin-3.3.0/bin/"
+      - "/usr/local/bin/"
+      - "/bin/"
+      - "/usr/sbin/"
+      - "/sbin/"
+      - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts/"
+      - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand/"
+      - "/Users/Damian/platform-tools/"
+      - "/Users/Damian/Library/Android/sdk/platform-tools/"
+      - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin/"
+      - "/Users/Damian/Library/Android/sdk/emulator/"
+      - "/Users/Damian/.pub-cache/bin/"
+    found: "/usr/bin/objdump"
+    search_context:
+      ENV{PATH}:
+        - "/Users/Damian/Desktop/google-cloud-sdk/bin"
+        - "/Users/Damian/.opencode/bin"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/.nvm/versions/node/v24.12.0/bin"
+        - "/Users/Damian/.rd/bin"
+        - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin"
+        - "/usr/local/Caskroom/miniconda/base/condabin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-3.3.0/bin"
+        - "/opt/local/bin"
+        - "/opt/local/sbin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-bin-3.3.0/bin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts"
+        - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin"
+        - "/Users/Damian/Library/Android/sdk/emulator"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/.pub-cache/bin"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeDetermineCXXCompiler.cmake:206 (include)"
+      - "CMakeLists.txt:2 (project)"
+    mode: "program"
+    variable: "CMAKE_OBJCOPY"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "objcopy"
+    candidate_directories:
+      - "/usr/bin/"
+      - "/Users/Damian/Desktop/google-cloud-sdk/bin/"
+      - "/Users/Damian/.opencode/bin/"
+      - "/Users/Damian/flutter/bin/"
+      - "/Users/Damian/.nvm/versions/node/v24.12.0/bin/"
+      - "/Users/Damian/.rd/bin/"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin/"
+      - "/usr/local/Caskroom/miniconda/base/condabin/"
+      - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin/"
+      - "/Users/Damian/Desktop/jason-3.3.0/bin/"
+      - "/opt/local/bin/"
+      - "/opt/local/sbin/"
+      - "/Users/Damian/Desktop/jason-bin-3.3.0/bin/"
+      - "/usr/local/bin/"
+      - "/bin/"
+      - "/usr/sbin/"
+      - "/sbin/"
+      - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts/"
+      - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand/"
+      - "/Users/Damian/platform-tools/"
+      - "/Users/Damian/Library/Android/sdk/platform-tools/"
+      - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin/"
+      - "/Users/Damian/Library/Android/sdk/emulator/"
+      - "/Users/Damian/.pub-cache/bin/"
+    searched_directories:
+      - "/usr/bin/objcopy"
+      - "/Users/Damian/Desktop/google-cloud-sdk/bin/objcopy"
+      - "/Users/Damian/.opencode/bin/objcopy"
+      - "/Users/Damian/flutter/bin/objcopy"
+      - "/Users/Damian/.nvm/versions/node/v24.12.0/bin/objcopy"
+      - "/Users/Damian/.rd/bin/objcopy"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin/objcopy"
+      - "/usr/local/Caskroom/miniconda/base/condabin/objcopy"
+      - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin/objcopy"
+      - "/Users/Damian/Desktop/jason-3.3.0/bin/objcopy"
+      - "/opt/local/bin/objcopy"
+      - "/opt/local/sbin/objcopy"
+      - "/Users/Damian/Desktop/jason-bin-3.3.0/bin/objcopy"
+      - "/usr/local/bin/objcopy"
+      - "/bin/objcopy"
+      - "/usr/sbin/objcopy"
+      - "/sbin/objcopy"
+      - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts/objcopy"
+      - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand/objcopy"
+      - "/Users/Damian/platform-tools/objcopy"
+      - "/Users/Damian/Library/Android/sdk/platform-tools/objcopy"
+      - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin/objcopy"
+      - "/Users/Damian/Library/Android/sdk/emulator/objcopy"
+      - "/Users/Damian/.pub-cache/bin/objcopy"
+    found: false
+    search_context:
+      ENV{PATH}:
+        - "/Users/Damian/Desktop/google-cloud-sdk/bin"
+        - "/Users/Damian/.opencode/bin"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/.nvm/versions/node/v24.12.0/bin"
+        - "/Users/Damian/.rd/bin"
+        - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin"
+        - "/usr/local/Caskroom/miniconda/base/condabin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-3.3.0/bin"
+        - "/opt/local/bin"
+        - "/opt/local/sbin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-bin-3.3.0/bin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts"
+        - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin"
+        - "/Users/Damian/Library/Android/sdk/emulator"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/.pub-cache/bin"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeDetermineCXXCompiler.cmake:206 (include)"
+      - "CMakeLists.txt:2 (project)"
+    mode: "program"
+    variable: "CMAKE_READELF"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "readelf"
+    candidate_directories:
+      - "/usr/bin/"
+      - "/Users/Damian/Desktop/google-cloud-sdk/bin/"
+      - "/Users/Damian/.opencode/bin/"
+      - "/Users/Damian/flutter/bin/"
+      - "/Users/Damian/.nvm/versions/node/v24.12.0/bin/"
+      - "/Users/Damian/.rd/bin/"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin/"
+      - "/usr/local/Caskroom/miniconda/base/condabin/"
+      - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin/"
+      - "/Users/Damian/Desktop/jason-3.3.0/bin/"
+      - "/opt/local/bin/"
+      - "/opt/local/sbin/"
+      - "/Users/Damian/Desktop/jason-bin-3.3.0/bin/"
+      - "/usr/local/bin/"
+      - "/bin/"
+      - "/usr/sbin/"
+      - "/sbin/"
+      - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts/"
+      - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand/"
+      - "/Users/Damian/platform-tools/"
+      - "/Users/Damian/Library/Android/sdk/platform-tools/"
+      - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin/"
+      - "/Users/Damian/Library/Android/sdk/emulator/"
+      - "/Users/Damian/.pub-cache/bin/"
+    searched_directories:
+      - "/usr/bin/readelf"
+      - "/Users/Damian/Desktop/google-cloud-sdk/bin/readelf"
+      - "/Users/Damian/.opencode/bin/readelf"
+      - "/Users/Damian/flutter/bin/readelf"
+      - "/Users/Damian/.nvm/versions/node/v24.12.0/bin/readelf"
+      - "/Users/Damian/.rd/bin/readelf"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin/readelf"
+      - "/usr/local/Caskroom/miniconda/base/condabin/readelf"
+      - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin/readelf"
+      - "/Users/Damian/Desktop/jason-3.3.0/bin/readelf"
+      - "/opt/local/bin/readelf"
+      - "/opt/local/sbin/readelf"
+      - "/Users/Damian/Desktop/jason-bin-3.3.0/bin/readelf"
+      - "/usr/local/bin/readelf"
+      - "/bin/readelf"
+      - "/usr/sbin/readelf"
+      - "/sbin/readelf"
+      - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts/readelf"
+      - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand/readelf"
+      - "/Users/Damian/platform-tools/readelf"
+      - "/Users/Damian/Library/Android/sdk/platform-tools/readelf"
+      - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin/readelf"
+      - "/Users/Damian/Library/Android/sdk/emulator/readelf"
+      - "/Users/Damian/.pub-cache/bin/readelf"
+    found: false
+    search_context:
+      ENV{PATH}:
+        - "/Users/Damian/Desktop/google-cloud-sdk/bin"
+        - "/Users/Damian/.opencode/bin"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/.nvm/versions/node/v24.12.0/bin"
+        - "/Users/Damian/.rd/bin"
+        - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin"
+        - "/usr/local/Caskroom/miniconda/base/condabin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-3.3.0/bin"
+        - "/opt/local/bin"
+        - "/opt/local/sbin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-bin-3.3.0/bin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts"
+        - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin"
+        - "/Users/Damian/Library/Android/sdk/emulator"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/.pub-cache/bin"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeDetermineCXXCompiler.cmake:206 (include)"
+      - "CMakeLists.txt:2 (project)"
+    mode: "program"
+    variable: "CMAKE_DLLTOOL"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "dlltool"
+    candidate_directories:
+      - "/usr/bin/"
+      - "/Users/Damian/Desktop/google-cloud-sdk/bin/"
+      - "/Users/Damian/.opencode/bin/"
+      - "/Users/Damian/flutter/bin/"
+      - "/Users/Damian/.nvm/versions/node/v24.12.0/bin/"
+      - "/Users/Damian/.rd/bin/"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin/"
+      - "/usr/local/Caskroom/miniconda/base/condabin/"
+      - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin/"
+      - "/Users/Damian/Desktop/jason-3.3.0/bin/"
+      - "/opt/local/bin/"
+      - "/opt/local/sbin/"
+      - "/Users/Damian/Desktop/jason-bin-3.3.0/bin/"
+      - "/usr/local/bin/"
+      - "/bin/"
+      - "/usr/sbin/"
+      - "/sbin/"
+      - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts/"
+      - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand/"
+      - "/Users/Damian/platform-tools/"
+      - "/Users/Damian/Library/Android/sdk/platform-tools/"
+      - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin/"
+      - "/Users/Damian/Library/Android/sdk/emulator/"
+      - "/Users/Damian/.pub-cache/bin/"
+    searched_directories:
+      - "/usr/bin/dlltool"
+      - "/Users/Damian/Desktop/google-cloud-sdk/bin/dlltool"
+      - "/Users/Damian/.opencode/bin/dlltool"
+      - "/Users/Damian/flutter/bin/dlltool"
+      - "/Users/Damian/.nvm/versions/node/v24.12.0/bin/dlltool"
+      - "/Users/Damian/.rd/bin/dlltool"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin/dlltool"
+      - "/usr/local/Caskroom/miniconda/base/condabin/dlltool"
+      - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin/dlltool"
+      - "/Users/Damian/Desktop/jason-3.3.0/bin/dlltool"
+      - "/opt/local/bin/dlltool"
+      - "/opt/local/sbin/dlltool"
+      - "/Users/Damian/Desktop/jason-bin-3.3.0/bin/dlltool"
+      - "/usr/local/bin/dlltool"
+      - "/bin/dlltool"
+      - "/usr/sbin/dlltool"
+      - "/sbin/dlltool"
+      - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts/dlltool"
+      - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand/dlltool"
+      - "/Users/Damian/platform-tools/dlltool"
+      - "/Users/Damian/Library/Android/sdk/platform-tools/dlltool"
+      - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin/dlltool"
+      - "/Users/Damian/Library/Android/sdk/emulator/dlltool"
+      - "/Users/Damian/.pub-cache/bin/dlltool"
+    found: false
+    search_context:
+      ENV{PATH}:
+        - "/Users/Damian/Desktop/google-cloud-sdk/bin"
+        - "/Users/Damian/.opencode/bin"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/.nvm/versions/node/v24.12.0/bin"
+        - "/Users/Damian/.rd/bin"
+        - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin"
+        - "/usr/local/Caskroom/miniconda/base/condabin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-3.3.0/bin"
+        - "/opt/local/bin"
+        - "/opt/local/sbin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-bin-3.3.0/bin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts"
+        - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin"
+        - "/Users/Damian/Library/Android/sdk/emulator"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/.pub-cache/bin"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeDetermineCXXCompiler.cmake:206 (include)"
+      - "CMakeLists.txt:2 (project)"
+    mode: "program"
+    variable: "CMAKE_ADDR2LINE"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "addr2line"
+    candidate_directories:
+      - "/usr/bin/"
+      - "/Users/Damian/Desktop/google-cloud-sdk/bin/"
+      - "/Users/Damian/.opencode/bin/"
+      - "/Users/Damian/flutter/bin/"
+      - "/Users/Damian/.nvm/versions/node/v24.12.0/bin/"
+      - "/Users/Damian/.rd/bin/"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin/"
+      - "/usr/local/Caskroom/miniconda/base/condabin/"
+      - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin/"
+      - "/Users/Damian/Desktop/jason-3.3.0/bin/"
+      - "/opt/local/bin/"
+      - "/opt/local/sbin/"
+      - "/Users/Damian/Desktop/jason-bin-3.3.0/bin/"
+      - "/usr/local/bin/"
+      - "/bin/"
+      - "/usr/sbin/"
+      - "/sbin/"
+      - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts/"
+      - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand/"
+      - "/Users/Damian/platform-tools/"
+      - "/Users/Damian/Library/Android/sdk/platform-tools/"
+      - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin/"
+      - "/Users/Damian/Library/Android/sdk/emulator/"
+      - "/Users/Damian/.pub-cache/bin/"
+    searched_directories:
+      - "/usr/bin/addr2line"
+      - "/Users/Damian/Desktop/google-cloud-sdk/bin/addr2line"
+      - "/Users/Damian/.opencode/bin/addr2line"
+      - "/Users/Damian/flutter/bin/addr2line"
+      - "/Users/Damian/.nvm/versions/node/v24.12.0/bin/addr2line"
+      - "/Users/Damian/.rd/bin/addr2line"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin/addr2line"
+      - "/usr/local/Caskroom/miniconda/base/condabin/addr2line"
+      - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin/addr2line"
+      - "/Users/Damian/Desktop/jason-3.3.0/bin/addr2line"
+      - "/opt/local/bin/addr2line"
+      - "/opt/local/sbin/addr2line"
+      - "/Users/Damian/Desktop/jason-bin-3.3.0/bin/addr2line"
+      - "/usr/local/bin/addr2line"
+      - "/bin/addr2line"
+      - "/usr/sbin/addr2line"
+      - "/sbin/addr2line"
+      - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts/addr2line"
+      - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand/addr2line"
+      - "/Users/Damian/platform-tools/addr2line"
+      - "/Users/Damian/Library/Android/sdk/platform-tools/addr2line"
+      - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin/addr2line"
+      - "/Users/Damian/Library/Android/sdk/emulator/addr2line"
+      - "/Users/Damian/.pub-cache/bin/addr2line"
+    found: false
+    search_context:
+      ENV{PATH}:
+        - "/Users/Damian/Desktop/google-cloud-sdk/bin"
+        - "/Users/Damian/.opencode/bin"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/.nvm/versions/node/v24.12.0/bin"
+        - "/Users/Damian/.rd/bin"
+        - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin"
+        - "/usr/local/Caskroom/miniconda/base/condabin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-3.3.0/bin"
+        - "/opt/local/bin"
+        - "/opt/local/sbin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-bin-3.3.0/bin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts"
+        - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin"
+        - "/Users/Damian/Library/Android/sdk/emulator"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/.pub-cache/bin"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeDetermineCXXCompiler.cmake:206 (include)"
+      - "CMakeLists.txt:2 (project)"
+    mode: "program"
+    variable: "CMAKE_TAPI"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "tapi"
+    candidate_directories:
+      - "/usr/bin/"
+      - "/Users/Damian/Desktop/google-cloud-sdk/bin/"
+      - "/Users/Damian/.opencode/bin/"
+      - "/Users/Damian/flutter/bin/"
+      - "/Users/Damian/.nvm/versions/node/v24.12.0/bin/"
+      - "/Users/Damian/.rd/bin/"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin/"
+      - "/usr/local/Caskroom/miniconda/base/condabin/"
+      - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin/"
+      - "/Users/Damian/Desktop/jason-3.3.0/bin/"
+      - "/opt/local/bin/"
+      - "/opt/local/sbin/"
+      - "/Users/Damian/Desktop/jason-bin-3.3.0/bin/"
+      - "/usr/local/bin/"
+      - "/bin/"
+      - "/usr/sbin/"
+      - "/sbin/"
+      - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts/"
+      - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand/"
+      - "/Users/Damian/platform-tools/"
+      - "/Users/Damian/Library/Android/sdk/platform-tools/"
+      - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin/"
+      - "/Users/Damian/Library/Android/sdk/emulator/"
+      - "/Users/Damian/.pub-cache/bin/"
+    searched_directories:
+      - "/usr/bin/tapi"
+      - "/Users/Damian/Desktop/google-cloud-sdk/bin/tapi"
+      - "/Users/Damian/.opencode/bin/tapi"
+      - "/Users/Damian/flutter/bin/tapi"
+      - "/Users/Damian/.nvm/versions/node/v24.12.0/bin/tapi"
+      - "/Users/Damian/.rd/bin/tapi"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin/tapi"
+      - "/usr/local/Caskroom/miniconda/base/condabin/tapi"
+      - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin/tapi"
+      - "/Users/Damian/Desktop/jason-3.3.0/bin/tapi"
+      - "/opt/local/bin/tapi"
+      - "/opt/local/sbin/tapi"
+      - "/Users/Damian/Desktop/jason-bin-3.3.0/bin/tapi"
+      - "/usr/local/bin/tapi"
+      - "/bin/tapi"
+      - "/usr/sbin/tapi"
+      - "/sbin/tapi"
+      - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts/tapi"
+      - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand/tapi"
+      - "/Users/Damian/platform-tools/tapi"
+      - "/Users/Damian/Library/Android/sdk/platform-tools/tapi"
+      - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin/tapi"
+      - "/Users/Damian/Library/Android/sdk/emulator/tapi"
+      - "/Users/Damian/.pub-cache/bin/tapi"
+    found: false
+    search_context:
+      ENV{PATH}:
+        - "/Users/Damian/Desktop/google-cloud-sdk/bin"
+        - "/Users/Damian/.opencode/bin"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/.nvm/versions/node/v24.12.0/bin"
+        - "/Users/Damian/.rd/bin"
+        - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin"
+        - "/usr/local/Caskroom/miniconda/base/condabin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-3.3.0/bin"
+        - "/opt/local/bin"
+        - "/opt/local/sbin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-bin-3.3.0/bin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts"
+        - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin"
+        - "/Users/Damian/Library/Android/sdk/emulator"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/.pub-cache/bin"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Darwin.cmake:76 (find_program)"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeSystemSpecificInformation.cmake:32 (include)"
+      - "CMakeLists.txt:2 (project)"
+    mode: "program"
+    variable: "CMAKE_INSTALL_NAME_TOOL"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "install_name_tool"
+    candidate_directories:
+      - "/Users/Damian/Desktop/google-cloud-sdk/bin/"
+      - "/Users/Damian/.opencode/bin/"
+      - "/Users/Damian/flutter/bin/"
+      - "/Users/Damian/.nvm/versions/node/v24.12.0/bin/"
+      - "/Users/Damian/.rd/bin/"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin/"
+      - "/usr/local/Caskroom/miniconda/base/condabin/"
+      - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin/"
+      - "/Users/Damian/Desktop/jason-3.3.0/bin/"
+      - "/opt/local/bin/"
+      - "/opt/local/sbin/"
+      - "/Users/Damian/Desktop/jason-bin-3.3.0/bin/"
+      - "/usr/local/bin/"
+      - "/usr/bin/"
+      - "/bin/"
+      - "/usr/sbin/"
+      - "/sbin/"
+      - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts/"
+      - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand/"
+      - "/Users/Damian/platform-tools/"
+      - "/Users/Damian/Library/Android/sdk/platform-tools/"
+      - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin/"
+      - "/Users/Damian/Library/Android/sdk/emulator/"
+      - "/Users/Damian/.pub-cache/bin/"
+    searched_directories:
+      - "/Users/Damian/Desktop/google-cloud-sdk/bin/install_name_tool"
+      - "/Users/Damian/.opencode/bin/install_name_tool"
+      - "/Users/Damian/flutter/bin/install_name_tool"
+      - "/Users/Damian/.nvm/versions/node/v24.12.0/bin/install_name_tool"
+      - "/Users/Damian/.rd/bin/install_name_tool"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin/install_name_tool"
+      - "/usr/local/Caskroom/miniconda/base/condabin/install_name_tool"
+      - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin/install_name_tool"
+      - "/Users/Damian/Desktop/jason-3.3.0/bin/install_name_tool"
+      - "/opt/local/bin/install_name_tool"
+      - "/opt/local/sbin/install_name_tool"
+      - "/Users/Damian/Desktop/jason-bin-3.3.0/bin/install_name_tool"
+      - "/usr/local/bin/install_name_tool"
+    found: "/usr/bin/install_name_tool"
+    search_context:
+      ENV{PATH}:
+        - "/Users/Damian/Desktop/google-cloud-sdk/bin"
+        - "/Users/Damian/.opencode/bin"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/.nvm/versions/node/v24.12.0/bin"
+        - "/Users/Damian/.rd/bin"
+        - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin"
+        - "/usr/local/Caskroom/miniconda/base/condabin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-3.3.0/bin"
+        - "/opt/local/bin"
+        - "/opt/local/sbin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-bin-3.3.0/bin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts"
+        - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin"
+        - "/Users/Damian/Library/Android/sdk/emulator"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/.pub-cache/bin"
+      CMAKE_INSTALL_PREFIX: "/usr/local"
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeDetermineCompilerABI.cmake:83 (try_compile)"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:2 (project)"
+    checks:
+      - "Detecting CXX compiler ABI info"
+    directories:
+      source: "/Users/Damian/approximate-nearest-neighbor-graphs/hnsw_pip_cpp/src/build/CMakeFiles/CMakeScratch/TryCompile-EtiZOm"
+      binary: "/Users/Damian/approximate-nearest-neighbor-graphs/hnsw_pip_cpp/src/build/CMakeFiles/CMakeScratch/TryCompile-EtiZOm"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "-O3 -DNDEBUG -march=native -ffast-math"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_CXX_SCAN_FOR_MODULES: "OFF"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_OSX_ARCHITECTURES: ""
+      CMAKE_OSX_DEPLOYMENT_TARGET: ""
+      CMAKE_OSX_SYSROOT: ""
+    buildResult:
+      variable: "CMAKE_CXX_ABI_COMPILED"
+      cached: true
+      stdout: |
+        Change Dir: '/Users/Damian/approximate-nearest-neighbor-graphs/hnsw_pip_cpp/src/build/CMakeFiles/CMakeScratch/TryCompile-EtiZOm'
+        
+        Run Build Command(s): /usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_23bd7/fast
+        /Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/cmTC_23bd7.dir/build.make CMakeFiles/cmTC_23bd7.dir/build
+        Building CXX object CMakeFiles/cmTC_23bd7.dir/CMakeCXXCompilerABI.cpp.o
+        /usr/bin/c++   -O3 -DNDEBUG -march=native -ffast-math    -v -Wl,-v -MD -MT CMakeFiles/cmTC_23bd7.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_23bd7.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_23bd7.dir/CMakeCXXCompilerABI.cpp.o -c /usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeCXXCompilerABI.cpp
+        Apple clang version 14.0.0 (clang-1400.0.29.202)
+        Target: x86_64-apple-darwin21.6.0
+        Thread model: posix
+        InstalledDir: /Library/Developer/CommandLineTools/usr/bin
+        clang: warning: -Wl,-v: 'linker' input unused [-Wunused-command-line-argument]
+         "/Library/Developer/CommandLineTools/usr/bin/clang" -cc1 -triple x86_64-apple-macosx12.0.0 -Wundef-prefix=TARGET_OS_ -Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -Werror=implicit-function-declaration -emit-obj --mrelax-relocations -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model pic -pic-level 2 -mframe-pointer=all -mllvm -extra-vectorizer-passes -fno-strict-return -menable-no-infs -menable-no-nans -menable-unsafe-fp-math -fno-signed-zeros -mreassociate -freciprocal-math -ffp-contract=fast -fno-rounding-math -ffast-math -ffinite-math-only -funwind-tables=2 -target-sdk-version=13.1 -fvisibility-inlines-hidden-static-local-var -target-cpu broadwell -target-feature -avx512pf -target-feature -tsxldtrk -target-feature +cx16 -target-feature +sahf -target-feature -tbm -target-feature -avx512ifma -target-feature -sha -target-feature +crc32 -target-feature -fma4 -target-feature -vpclmulqdq -target-feature +prfchw -target-feature +bmi2 -target-feature -cldemote -target-feature +fsgsbase -target-feature -ptwrite -target-feature -amx-tile -target-feature -uintr -target-feature -gfni -target-feature +popcnt -target-feature -widekl -target-feature +aes -target-feature -avx512bitalg -target-feature -movdiri -target-feature -xsaves -target-feature -avx512er -target-feature -avxvnni -target-feature -avx512fp16 -target-feature -avx512vnni -target-feature -amx-bf16 -target-feature -avx512vpopcntdq -target-feature -pconfig -target-feature -clwb -target-feature -avx512f -target-feature -xsavec -target-feature -clzero -target-feature -pku -target-feature +mmx -target-feature -lwp -target-feature -rdpid -target-feature -xop -target-feature +rdseed -target-feature -waitpkg -target-feature -kl -target-feature -movdir64b -target-feature -sse4a -target-feature -avx512bw -target-feature -clflushopt -target-feature +xsave -target-feature -avx512vbmi2 -target-feature +64bit -target-feature -avx512vl -target-feature -serialize -target-feature -hreset -target-feature +invpcid -target-feature -avx512cd -target-feature +avx -target-feature -vaes -target-feature -avx512bf16 -target-feature +cx8 -target-feature +fma -target-feature -rtm -target-feature +bmi -target-feature -enqcmd -target-feature +rdrnd -target-feature -mwaitx -target-feature +sse4.1 -target-feature +sse4.2 -target-feature +avx2 -target-feature +fxsr -target-feature -wbnoinvd -target-feature +sse -target-feature +lzcnt -target-feature +pclmul -target-feature -prefetchwt1 -target-feature +f16c -target-feature +ssse3 -target-feature -sgx -target-feature -shstk -target-feature +cmov -target-feature -avx512vbmi -target-feature -amx-int8 -target-feature +movbe -target-feature -avx512vp2intersect -target-feature +xsaveopt -target-feature -avx512dq -target-feature +sse2 -target-feature +adx -target-feature +sse3 -debugger-tuning=lldb -target-linker-version 820.1 -v -resource-dir /Library/Developer/CommandLineTools/usr/lib/clang/14.0.0 -dependency-file CMakeFiles/cmTC_23bd7.dir/CMakeCXXCompilerABI.cpp.o.d -skip-unused-modulemap-deps -MT CMakeFiles/cmTC_23bd7.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -D NDEBUG -I/usr/local/include -stdlib=libc++ -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1 -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/local/include -internal-isystem /Library/Developer/CommandLineTools/usr/lib/clang/14.0.0/include -internal-externc-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -internal-externc-isystem /Library/Developer/CommandLineTools/usr/include -O3 -Wno-reorder-init-list -Wno-implicit-int-float-conversion -Wno-c99-designator -Wno-final-dtor-non-final-class -Wno-extra-semi-stmt -Wno-misleading-indentation -Wno-quoted-include-in-framework-header -Wno-implicit-fallthrough -Wno-enum-enum-conversion -Wno-enum-float-conversion -Wno-elaborated-enum-base -Wno-reserved-identifier -Wno-gnu-folding-constant -Wno-cast-function-type -Wno-bitwise-instead-of-logical -fdeprecated-macro -fdebug-compilation-dir=/Users/Damian/approximate-nearest-neighbor-graphs/hnsw_pip_cpp/src/build/CMakeFiles/CMakeScratch/TryCompile-EtiZOm -ferror-limit 19 -stack-protector 1 -fstack-check -mdarwin-stkchk-strong-link -fblocks -fencode-extended-block-signature -fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 -fno-cxx-modules -fcxx-exceptions -fexceptions -fmax-type-align=16 -fcommon -vectorize-loops -vectorize-slp -clang-vendor-feature=+messageToSelfInClassMethodIdReturnType -clang-vendor-feature=+disableInferNewAvailabilityFromInit -clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation -fno-odr-hash-protocols -clang-vendor-feature=+enableAggressiveVLAFolding -clang-vendor-feature=+revert09abecef7bbf -clang-vendor-feature=+thisNoAlignAttr -clang-vendor-feature=+thisNoNullAttr -mllvm -disable-aligned-alloc-awareness=1 -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_23bd7.dir/CMakeCXXCompilerABI.cpp.o -x c++ /usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeCXXCompilerABI.cpp
+        clang -cc1 version 14.0.0 (clang-1400.0.29.202) default target x86_64-apple-darwin21.6.0
+        ignoring nonexistent directory "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/local/include"
+        ignoring nonexistent directory "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/Library/Frameworks"
+        #include "..." search starts here:
+        #include <...> search starts here:
+         /usr/local/include
+         /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1
+         /Library/Developer/CommandLineTools/usr/lib/clang/14.0.0/include
+         /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include
+         /Library/Developer/CommandLineTools/usr/include
+         /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks (framework directory)
+        End of search list.
+        Linking CXX executable cmTC_23bd7
+        /usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/bin/cmake -E cmake_link_script CMakeFiles/cmTC_23bd7.dir/link.txt --verbose=1
+        Apple clang version 14.0.0 (clang-1400.0.29.202)
+        Target: x86_64-apple-darwin21.6.0
+        Thread model: posix
+        InstalledDir: /Library/Developer/CommandLineTools/usr/bin
+         "/Library/Developer/CommandLineTools/usr/bin/ld" -demangle -lto_library /Library/Developer/CommandLineTools/usr/lib/libLTO.dylib -dynamic -arch x86_64 -platform_version macos 12.0.0 13.1 -syslibroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -o cmTC_23bd7 -L/usr/local/lib -search_paths_first -headerpad_max_install_names -v CMakeFiles/cmTC_23bd7.dir/CMakeCXXCompilerABI.cpp.o -lc++ -lSystem /Library/Developer/CommandLineTools/usr/lib/clang/14.0.0/lib/darwin/libclang_rt.osx.a
+        @(#)PROGRAM:ld  PROJECT:ld64-820.1
+        BUILD 20:07:01 Nov  7 2022
+        configured to support archs: armv6 armv7 armv7s arm64 arm64e arm64_32 i386 x86_64 x86_64h armv6m armv7k armv7m armv7em
+        Library search paths:
+        	/usr/local/lib
+        	/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib
+        Framework search paths:
+        	/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/
+        /usr/bin/c++ -O3 -DNDEBUG -march=native -ffast-math  -Wl,-search_paths_first -Wl,-headerpad_max_install_names  -v -Wl,-v CMakeFiles/cmTC_23bd7.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_23bd7
+        
+      exitCode: 0
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeDetermineCompilerABI.cmake:122 (message)"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      Effective list of requested architectures (possibly empty)  : ""
+      Effective list of architectures found in the ABI info binary: "x86_64"
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeDetermineCompilerABI.cmake:217 (message)"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      Parsed CXX implicit include dir info: rv=done
+        found start of include info
+        found start of implicit include info
+          add: [/usr/local/include]
+          add: [/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1]
+          add: [/Library/Developer/CommandLineTools/usr/lib/clang/14.0.0/include]
+          add: [/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include]
+          add: [/Library/Developer/CommandLineTools/usr/include]
+        end of search list found
+        collapse include dir [/usr/local/include] ==> [/usr/local/include]
+        collapse include dir [/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1] ==> [/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1]
+        collapse include dir [/Library/Developer/CommandLineTools/usr/lib/clang/14.0.0/include] ==> [/Library/Developer/CommandLineTools/usr/lib/clang/14.0.0/include]
+        collapse include dir [/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include] ==> [/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include]
+        collapse include dir [/Library/Developer/CommandLineTools/usr/include] ==> [/Library/Developer/CommandLineTools/usr/include]
+        implicit include dirs: [/usr/local/include;/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1;/Library/Developer/CommandLineTools/usr/lib/clang/14.0.0/include;/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include;/Library/Developer/CommandLineTools/usr/include]
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeDetermineCompilerABI.cmake:253 (message)"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      Parsed CXX implicit link information:
+        link line regex: [^( *|.*[/\\])(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
+        linker tool regex: [^[ 	]*(->|"|[0-9]+>[ 	-]*Build:[ 	0-9]+ ms[ 	]*)?[ 	]*(([^"]*[/\\])?(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)))("|,| |$)]
+        ignore line: [Change Dir: '/Users/Damian/approximate-nearest-neighbor-graphs/hnsw_pip_cpp/src/build/CMakeFiles/CMakeScratch/TryCompile-EtiZOm']
+        ignore line: []
+        ignore line: [Run Build Command(s): /usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_23bd7/fast]
+        ignore line: [/Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/cmTC_23bd7.dir/build.make CMakeFiles/cmTC_23bd7.dir/build]
+        ignore line: [Building CXX object CMakeFiles/cmTC_23bd7.dir/CMakeCXXCompilerABI.cpp.o]
+        ignore line: [/usr/bin/c++   -O3 -DNDEBUG -march=native -ffast-math    -v -Wl -v -MD -MT CMakeFiles/cmTC_23bd7.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_23bd7.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_23bd7.dir/CMakeCXXCompilerABI.cpp.o -c /usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeCXXCompilerABI.cpp]
+        ignore line: [Apple clang version 14.0.0 (clang-1400.0.29.202)]
+        ignore line: [Target: x86_64-apple-darwin21.6.0]
+        ignore line: [Thread model: posix]
+        ignore line: [InstalledDir: /Library/Developer/CommandLineTools/usr/bin]
+        ignore line: [clang: warning: -Wl -v: 'linker' input unused [-Wunused-command-line-argument]]
+        ignore line: [ "/Library/Developer/CommandLineTools/usr/bin/clang" -cc1 -triple x86_64-apple-macosx12.0.0 -Wundef-prefix=TARGET_OS_ -Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -Werror=implicit-function-declaration -emit-obj --mrelax-relocations -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model pic -pic-level 2 -mframe-pointer=all -mllvm -extra-vectorizer-passes -fno-strict-return -menable-no-infs -menable-no-nans -menable-unsafe-fp-math -fno-signed-zeros -mreassociate -freciprocal-math -ffp-contract=fast -fno-rounding-math -ffast-math -ffinite-math-only -funwind-tables=2 -target-sdk-version=13.1 -fvisibility-inlines-hidden-static-local-var -target-cpu broadwell -target-feature -avx512pf -target-feature -tsxldtrk -target-feature +cx16 -target-feature +sahf -target-feature -tbm -target-feature -avx512ifma -target-feature -sha -target-feature +crc32 -target-feature -fma4 -target-feature -vpclmulqdq -target-feature +prfchw -target-feature +bmi2 -target-feature -cldemote -target-feature +fsgsbase -target-feature -ptwrite -target-feature -amx-tile -target-feature -uintr -target-feature -gfni -target-feature +popcnt -target-feature -widekl -target-feature +aes -target-feature -avx512bitalg -target-feature -movdiri -target-feature -xsaves -target-feature -avx512er -target-feature -avxvnni -target-feature -avx512fp16 -target-feature -avx512vnni -target-feature -amx-bf16 -target-feature -avx512vpopcntdq -target-feature -pconfig -target-feature -clwb -target-feature -avx512f -target-feature -xsavec -target-feature -clzero -target-feature -pku -target-feature +mmx -target-feature -lwp -target-feature -rdpid -target-feature -xop -target-feature +rdseed -target-feature -waitpkg -target-feature -kl -target-feature -movdir64b -target-feature -sse4a -target-feature -avx512bw -target-feature -clflushopt -target-feature +xsave -target-feature -avx512vbmi2 -target-feature +64bit -target-feature -avx512vl -target-feature -serialize -target-feature -hreset -target-feature +invpcid -target-feature -avx512cd -target-feature +avx -target-feature -vaes -target-feature -avx512bf16 -target-feature +cx8 -target-feature +fma -target-feature -rtm -target-feature +bmi -target-feature -enqcmd -target-feature +rdrnd -target-feature -mwaitx -target-feature +sse4.1 -target-feature +sse4.2 -target-feature +avx2 -target-feature +fxsr -target-feature -wbnoinvd -target-feature +sse -target-feature +lzcnt -target-feature +pclmul -target-feature -prefetchwt1 -target-feature +f16c -target-feature +ssse3 -target-feature -sgx -target-feature -shstk -target-feature +cmov -target-feature -avx512vbmi -target-feature -amx-int8 -target-feature +movbe -target-feature -avx512vp2intersect -target-feature +xsaveopt -target-feature -avx512dq -target-feature +sse2 -target-feature +adx -target-feature +sse3 -debugger-tuning=lldb -target-linker-version 820.1 -v -resource-dir /Library/Developer/CommandLineTools/usr/lib/clang/14.0.0 -dependency-file CMakeFiles/cmTC_23bd7.dir/CMakeCXXCompilerABI.cpp.o.d -skip-unused-modulemap-deps -MT CMakeFiles/cmTC_23bd7.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -D NDEBUG -I/usr/local/include -stdlib=libc++ -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1 -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/local/include -internal-isystem /Library/Developer/CommandLineTools/usr/lib/clang/14.0.0/include -internal-externc-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -internal-externc-isystem /Library/Developer/CommandLineTools/usr/include -O3 -Wno-reorder-init-list -Wno-implicit-int-float-conversion -Wno-c99-designator -Wno-final-dtor-non-final-class -Wno-extra-semi-stmt -Wno-misleading-indentation -Wno-quoted-include-in-framework-header -Wno-implicit-fallthrough -Wno-enum-enum-conversion -Wno-enum-float-conversion -Wno-elaborated-enum-base -Wno-reserved-identifier -Wno-gnu-folding-constant -Wno-cast-function-type -Wno-bitwise-instead-of-logical -fdeprecated-macro -fdebug-compilation-dir=/Users/Damian/approximate-nearest-neighbor-graphs/hnsw_pip_cpp/src/build/CMakeFiles/CMakeScratch/TryCompile-EtiZOm -ferror-limit 19 -stack-protector 1 -fstack-check -mdarwin-stkchk-strong-link -fblocks -fencode-extended-block-signature -fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 -fno-cxx-modules -fcxx-exceptions -fexceptions -fmax-type-align=16 -fcommon -vectorize-loops -vectorize-slp -clang-vendor-feature=+messageToSelfInClassMethodIdReturnType -clang-vendor-feature=+disableInferNewAvailabilityFromInit -clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation -fno-odr-hash-protocols -clang-vendor-feature=+enableAggressiveVLAFolding -clang-vendor-feature=+revert09abecef7bbf -clang-vendor-feature=+thisNoAlignAttr -clang-vendor-feature=+thisNoNullAttr -mllvm -disable-aligned-alloc-awareness=1 -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_23bd7.dir/CMakeCXXCompilerABI.cpp.o -x c++ /usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeCXXCompilerABI.cpp]
+        ignore line: [clang -cc1 version 14.0.0 (clang-1400.0.29.202) default target x86_64-apple-darwin21.6.0]
+        ignore line: [ignoring nonexistent directory "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/local/include"]
+        ignore line: [ignoring nonexistent directory "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/Library/Frameworks"]
+        ignore line: [#include "..." search starts here:]
+        ignore line: [#include <...> search starts here:]
+        ignore line: [ /usr/local/include]
+        ignore line: [ /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1]
+        ignore line: [ /Library/Developer/CommandLineTools/usr/lib/clang/14.0.0/include]
+        ignore line: [ /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include]
+        ignore line: [ /Library/Developer/CommandLineTools/usr/include]
+        ignore line: [ /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks (framework directory)]
+        ignore line: [End of search list.]
+        ignore line: [Linking CXX executable cmTC_23bd7]
+        ignore line: [/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/bin/cmake -E cmake_link_script CMakeFiles/cmTC_23bd7.dir/link.txt --verbose=1]
+        ignore line: [Apple clang version 14.0.0 (clang-1400.0.29.202)]
+        ignore line: [Target: x86_64-apple-darwin21.6.0]
+        ignore line: [Thread model: posix]
+        ignore line: [InstalledDir: /Library/Developer/CommandLineTools/usr/bin]
+        link line: [ "/Library/Developer/CommandLineTools/usr/bin/ld" -demangle -lto_library /Library/Developer/CommandLineTools/usr/lib/libLTO.dylib -dynamic -arch x86_64 -platform_version macos 12.0.0 13.1 -syslibroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -o cmTC_23bd7 -L/usr/local/lib -search_paths_first -headerpad_max_install_names -v CMakeFiles/cmTC_23bd7.dir/CMakeCXXCompilerABI.cpp.o -lc++ -lSystem /Library/Developer/CommandLineTools/usr/lib/clang/14.0.0/lib/darwin/libclang_rt.osx.a]
+          arg [/Library/Developer/CommandLineTools/usr/bin/ld] ==> ignore
+          arg [-demangle] ==> ignore
+          arg [-lto_library] ==> ignore, skip following value
+          arg [/Library/Developer/CommandLineTools/usr/lib/libLTO.dylib] ==> skip value of -lto_library
+          arg [-dynamic] ==> ignore
+          arg [-arch] ==> ignore
+          arg [x86_64] ==> ignore
+          arg [-platform_version] ==> ignore
+          arg [macos] ==> ignore
+          arg [12.0.0] ==> ignore
+          arg [13.1] ==> ignore
+          arg [-syslibroot] ==> ignore
+          arg [/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk] ==> ignore
+          arg [-o] ==> ignore
+          arg [cmTC_23bd7] ==> ignore
+          arg [-L/usr/local/lib] ==> dir [/usr/local/lib]
+          arg [-search_paths_first] ==> ignore
+          arg [-headerpad_max_install_names] ==> ignore
+          arg [-v] ==> ignore
+          arg [CMakeFiles/cmTC_23bd7.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
+          arg [-lc++] ==> lib [c++]
+          arg [-lSystem] ==> lib [System]
+          arg [/Library/Developer/CommandLineTools/usr/lib/clang/14.0.0/lib/darwin/libclang_rt.osx.a] ==> lib [/Library/Developer/CommandLineTools/usr/lib/clang/14.0.0/lib/darwin/libclang_rt.osx.a]
+        linker tool for 'CXX': /Library/Developer/CommandLineTools/usr/bin/ld
+        Library search paths: [;/usr/local/lib;/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib]
+        Framework search paths: [;/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/]
+        remove lib [System]
+        remove lib [/Library/Developer/CommandLineTools/usr/lib/clang/14.0.0/lib/darwin/libclang_rt.osx.a]
+        collapse library dir [/usr/local/lib] ==> [/usr/local/lib]
+        collapse library dir [/usr/local/lib] ==> [/usr/local/lib]
+        collapse library dir [/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib] ==> [/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib]
+        collapse framework dir [/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/] ==> [/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks]
+        implicit libs: [c++]
+        implicit objs: []
+        implicit dirs: [/usr/local/lib;/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib]
+        implicit fwks: [/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks]
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/Internal/CMakeDetermineLinkerId.cmake:38 (message)"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeDetermineCompilerABI.cmake:299 (cmake_determine_linker_id)"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      Running the CXX compiler's linker: "/Library/Developer/CommandLineTools/usr/bin/ld" "-v"
+      @(#)PROGRAM:ld  PROJECT:ld64-820.1
+      BUILD 20:07:01 Nov  7 2022
+      configured to support archs: armv6 armv7 armv7s arm64 arm64e arm64_32 i386 x86_64 x86_64h armv6m armv7k armv7m armv7em
+      LTO support using: LLVM version 14.0.0, (clang-1400.0.29.202) (static support for 29, runtime is 29)
+      TAPI support using: Apple TAPI version 14.0.0 (tapi-1400.0.11)
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/FindGit.cmake:111 (find_program)"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/FetchContent.cmake:1884 (find_package)"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/FetchContent.cmake:1619 (__FetchContent_populateSubbuild)"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/FetchContent.cmake:2155:EVAL:2 (__FetchContent_doPopulation)"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/FetchContent.cmake:2155 (cmake_language)"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/FetchContent.cmake:2394 (__FetchContent_Populate)"
+      - "CMakeLists.txt:13 (FetchContent_MakeAvailable)"
+    mode: "program"
+    variable: "GIT_EXECUTABLE"
+    description: "Git command line client"
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "git"
+    candidate_directories:
+      - "/Users/Damian/Desktop/google-cloud-sdk/bin/"
+      - "/Users/Damian/.opencode/bin/"
+      - "/Users/Damian/flutter/bin/"
+      - "/Users/Damian/.nvm/versions/node/v24.12.0/bin/"
+      - "/Users/Damian/.rd/bin/"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin/"
+      - "/usr/local/Caskroom/miniconda/base/condabin/"
+      - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin/"
+      - "/Users/Damian/Desktop/jason-3.3.0/bin/"
+      - "/opt/local/bin/"
+      - "/opt/local/sbin/"
+      - "/Users/Damian/Desktop/jason-bin-3.3.0/bin/"
+      - "/usr/local/bin/"
+      - "/usr/bin/"
+      - "/bin/"
+      - "/usr/sbin/"
+      - "/sbin/"
+      - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts/"
+      - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand/"
+      - "/Users/Damian/platform-tools/"
+      - "/Users/Damian/Library/Android/sdk/platform-tools/"
+      - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin/"
+      - "/Users/Damian/Library/Android/sdk/emulator/"
+      - "/Users/Damian/.pub-cache/bin/"
+      - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/bin/"
+      - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/sbin/"
+      - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/"
+      - "/usr/local/bin/"
+      - "/usr/local/sbin/"
+      - "/usr/local/"
+      - "/usr/bin/"
+      - "/usr/sbin/"
+      - "/usr/"
+      - "/bin/"
+      - "/sbin/"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/bin/"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/sbin/"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/"
+      - "/usr/X11R6/bin/"
+      - "/usr/X11R6/sbin/"
+      - "/usr/X11R6/"
+      - "/usr/pkg/bin/"
+      - "/usr/pkg/sbin/"
+      - "/usr/pkg/"
+      - "/opt/bin/"
+      - "/opt/sbin/"
+      - "/opt/"
+      - "/sw/bin/"
+      - "/sw/sbin/"
+      - "/sw/"
+      - "/opt/local/bin/"
+      - "/opt/local/sbin/"
+      - "/opt/local/"
+      - "/Users/Damian/Applications/"
+      - "/Applications/"
+    searched_directories:
+      - "/Users/Damian/Desktop/google-cloud-sdk/bin/git"
+      - "/Users/Damian/.opencode/bin/git"
+      - "/Users/Damian/flutter/bin/git"
+      - "/Users/Damian/.nvm/versions/node/v24.12.0/bin/git"
+      - "/Users/Damian/.rd/bin/git"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin/git"
+      - "/usr/local/Caskroom/miniconda/base/condabin/git"
+      - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin/git"
+      - "/Users/Damian/Desktop/jason-3.3.0/bin/git"
+      - "/opt/local/bin/git"
+      - "/opt/local/sbin/git"
+      - "/Users/Damian/Desktop/jason-bin-3.3.0/bin/git"
+    found: "/usr/local/bin/git"
+    search_context:
+      ENV{PATH}:
+        - "/Users/Damian/Desktop/google-cloud-sdk/bin"
+        - "/Users/Damian/.opencode/bin"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/.nvm/versions/node/v24.12.0/bin"
+        - "/Users/Damian/.rd/bin"
+        - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin"
+        - "/usr/local/Caskroom/miniconda/base/condabin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-3.3.0/bin"
+        - "/opt/local/bin"
+        - "/opt/local/sbin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-bin-3.3.0/bin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts"
+        - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin"
+        - "/Users/Damian/Library/Android/sdk/emulator"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/.pub-cache/bin"
+      CMAKE_INSTALL_PREFIX: "/usr/local"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr"
+        - "/usr/local"
+        - "/usr/local"
+        - "/usr"
+        - "/"
+        - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data"
+        - "/usr/local"
+        - "/usr/X11R6"
+        - "/usr/pkg"
+        - "/opt"
+        - "/sw"
+        - "/opt/local"
+      CMAKE_SYSTEM_APPBUNDLE_PATH:
+        - "/Users/Damian/Applications"
+        - "/Applications"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "build/_deps/pybind11-src/tools/FindPythonLibsNew.cmake:78 (find_program)"
+      - "build/_deps/pybind11-src/tools/pybind11Tools.cmake:50 (find_package)"
+      - "build/_deps/pybind11-src/tools/pybind11Common.cmake:192 (include)"
+      - "build/_deps/pybind11-src/CMakeLists.txt:247 (include)"
+    mode: "program"
+    variable: "PYTHON_EXECUTABLE"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "python"
+    candidate_directories:
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin/"
+    searched_directories:
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/python"
+    found: "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin/python"
+    search_context:
+      ENV{PATH}:
+        - "/Users/Damian/Desktop/google-cloud-sdk/bin"
+        - "/Users/Damian/.opencode/bin"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/.nvm/versions/node/v24.12.0/bin"
+        - "/Users/Damian/.rd/bin"
+        - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin"
+        - "/usr/local/Caskroom/miniconda/base/condabin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-3.3.0/bin"
+        - "/opt/local/bin"
+        - "/opt/local/sbin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-bin-3.3.0/bin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts"
+        - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin"
+        - "/Users/Damian/Library/Android/sdk/emulator"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/.pub-cache/bin"
+      CMAKE_INSTALL_PREFIX: "/usr/local"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr"
+        - "/usr/local"
+        - "/usr/local"
+        - "/usr"
+        - "/"
+        - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data"
+        - "/usr/local"
+        - "/usr/X11R6"
+        - "/usr/pkg"
+        - "/opt"
+        - "/sw"
+        - "/opt/local"
+      CMAKE_SYSTEM_APPBUNDLE_PATH:
+        - "/Users/Damian/Applications"
+        - "/Applications"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "build/_deps/pybind11-src/tools/FindPythonLibsNew.cmake:277 (find_library)"
+      - "build/_deps/pybind11-src/tools/pybind11Tools.cmake:50 (find_package)"
+      - "build/_deps/pybind11-src/tools/pybind11Common.cmake:192 (include)"
+      - "build/_deps/pybind11-src/CMakeLists.txt:247 (include)"
+    mode: "library"
+    variable: "PYTHON_LIBRARY"
+    description: "Path to a library."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "python3.11"
+    candidate_directories:
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/"
+    found: "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/libpython3.11.dylib"
+    search_context:
+      ENV{PATH}:
+        - "/Users/Damian/Desktop/google-cloud-sdk/bin"
+        - "/Users/Damian/.opencode/bin"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/.nvm/versions/node/v24.12.0/bin"
+        - "/Users/Damian/.rd/bin"
+        - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/bin"
+        - "/usr/local/Caskroom/miniconda/base/condabin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-3.3.0/bin"
+        - "/opt/local/bin"
+        - "/opt/local/sbin"
+        - "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin"
+        - "/Users/Damian/Desktop/jason-bin-3.3.0/bin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/Users/Damian/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-x64/bundled/scripts/noConfigScripts"
+        - "/Users/Damian/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand"
+        - "/Users/Damian/flutter/bin"
+        - "/Users/Damian/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/Library/Android/sdk/cmdline-tools/latest/bin"
+        - "/Users/Damian/Library/Android/sdk/emulator"
+        - "/Users/Damian/Library/Android/sdk/platform-tools"
+        - "/Users/Damian/.pub-cache/bin"
+      CMAKE_INSTALL_PREFIX: "/usr/local"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr"
+        - "/usr/local"
+        - "/usr/local"
+        - "/usr"
+        - "/"
+        - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data"
+        - "/usr/local"
+        - "/usr/X11R6"
+        - "/usr/pkg"
+        - "/opt"
+        - "/sw"
+        - "/opt/local"
+      CMAKE_SYSTEM_LIBRARY_PATH:
+        - "/usr/lib/X11"
+      CMAKE_SYSTEM_FRAMEWORK_PATH:
+        - "~/Library/Frameworks"
+        - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/Library/Frameworks"
+        - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/Network/Library/Frameworks"
+        - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks"
+        - "/Library/Developer/CommandLineTools/Library/Frameworks"
+        - "/Library/Developer/CommandLineTools/Library/Frameworks"
+        - "/Library/Frameworks"
+        - "/Network/Library/Frameworks"
+        - "/System/Library/Frameworks"
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/Internal/CheckSourceCompiles.cmake:104 (try_compile)"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CheckCXXCompilerFlag.cmake:103 (cmake_check_compiler_flag)"
+      - "build/_deps/pybind11-src/tools/pybind11Common.cmake:287 (check_cxx_compiler_flag)"
+      - "build/_deps/pybind11-src/tools/pybind11Common.cmake:327 (_pybind11_return_if_cxx_and_linker_flags_work)"
+      - "build/_deps/pybind11-src/tools/pybind11Common.cmake:399 (_pybind11_generate_lto)"
+      - "build/_deps/pybind11-src/CMakeLists.txt:247 (include)"
+    checks:
+      - "Performing Test HAS_FLTO_THIN"
+    directories:
+      source: "/Users/Damian/approximate-nearest-neighbor-graphs/hnsw_pip_cpp/src/build/CMakeFiles/CMakeScratch/TryCompile-YGOsNk"
+      binary: "/Users/Damian/approximate-nearest-neighbor-graphs/hnsw_pip_cpp/src/build/CMakeFiles/CMakeScratch/TryCompile-YGOsNk"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "-O3 -DNDEBUG -march=native -ffast-math"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: ""
+      CMAKE_OSX_ARCHITECTURES: ""
+      CMAKE_OSX_DEPLOYMENT_TARGET: ""
+      CMAKE_OSX_SYSROOT: ""
+    buildResult:
+      variable: "HAS_FLTO_THIN"
+      cached: true
+      stdout: |
+        Change Dir: '/Users/Damian/approximate-nearest-neighbor-graphs/hnsw_pip_cpp/src/build/CMakeFiles/CMakeScratch/TryCompile-YGOsNk'
+        
+        Run Build Command(s): /usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_7916b/fast
+        /Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/cmTC_7916b.dir/build.make CMakeFiles/cmTC_7916b.dir/build
+        Building CXX object CMakeFiles/cmTC_7916b.dir/src.cxx.o
+        /usr/bin/c++ -DHAS_FLTO_THIN  -O3 -DNDEBUG -march=native -ffast-math  -std=gnu++17   -flto -MD -MT CMakeFiles/cmTC_7916b.dir/src.cxx.o -MF CMakeFiles/cmTC_7916b.dir/src.cxx.o.d -o CMakeFiles/cmTC_7916b.dir/src.cxx.o -c /Users/Damian/approximate-nearest-neighbor-graphs/hnsw_pip_cpp/src/build/CMakeFiles/CMakeScratch/TryCompile-YGOsNk/src.cxx
+        Linking CXX executable cmTC_7916b
+        /usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/bin/cmake -E cmake_link_script CMakeFiles/cmTC_7916b.dir/link.txt --verbose=1
+        clang: error: unsupported argument '' to option 'flto='
+        /usr/bin/c++ -O3 -DNDEBUG -march=native -ffast-math  -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/cmTC_7916b.dir/src.cxx.o -o cmTC_7916b  -flto=
+        make[1]: *** [cmTC_7916b] Error 1
+        make: *** [cmTC_7916b/fast] Error 2
+        
+      exitCode: 2
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/Internal/CheckSourceCompiles.cmake:104 (try_compile)"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CheckCXXCompilerFlag.cmake:103 (cmake_check_compiler_flag)"
+      - "build/_deps/pybind11-src/tools/pybind11Common.cmake:287 (check_cxx_compiler_flag)"
+      - "build/_deps/pybind11-src/tools/pybind11Common.cmake:332 (_pybind11_return_if_cxx_and_linker_flags_work)"
+      - "build/_deps/pybind11-src/tools/pybind11Common.cmake:399 (_pybind11_generate_lto)"
+      - "build/_deps/pybind11-src/CMakeLists.txt:247 (include)"
+    checks:
+      - "Performing Test HAS_FLTO"
+    directories:
+      source: "/Users/Damian/approximate-nearest-neighbor-graphs/hnsw_pip_cpp/src/build/CMakeFiles/CMakeScratch/TryCompile-f2O8aX"
+      binary: "/Users/Damian/approximate-nearest-neighbor-graphs/hnsw_pip_cpp/src/build/CMakeFiles/CMakeScratch/TryCompile-f2O8aX"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "-O3 -DNDEBUG -march=native -ffast-math"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: ""
+      CMAKE_OSX_ARCHITECTURES: ""
+      CMAKE_OSX_DEPLOYMENT_TARGET: ""
+      CMAKE_OSX_SYSROOT: ""
+    buildResult:
+      variable: "HAS_FLTO"
+      cached: true
+      stdout: |
+        Change Dir: '/Users/Damian/approximate-nearest-neighbor-graphs/hnsw_pip_cpp/src/build/CMakeFiles/CMakeScratch/TryCompile-f2O8aX'
+        
+        Run Build Command(s): /usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_9c1d2/fast
+        /Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/cmTC_9c1d2.dir/build.make CMakeFiles/cmTC_9c1d2.dir/build
+        Building CXX object CMakeFiles/cmTC_9c1d2.dir/src.cxx.o
+        /usr/bin/c++ -DHAS_FLTO  -O3 -DNDEBUG -march=native -ffast-math  -std=gnu++17   -flto -MD -MT CMakeFiles/cmTC_9c1d2.dir/src.cxx.o -MF CMakeFiles/cmTC_9c1d2.dir/src.cxx.o.d -o CMakeFiles/cmTC_9c1d2.dir/src.cxx.o -c /Users/Damian/approximate-nearest-neighbor-graphs/hnsw_pip_cpp/src/build/CMakeFiles/CMakeScratch/TryCompile-f2O8aX/src.cxx
+        Linking CXX executable cmTC_9c1d2
+        /usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/bin/cmake -E cmake_link_script CMakeFiles/cmTC_9c1d2.dir/link.txt --verbose=1
+        /usr/bin/c++ -O3 -DNDEBUG -march=native -ffast-math  -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/cmTC_9c1d2.dir/src.cxx.o -o cmTC_9c1d2  -flto
+        
+      exitCode: 0
+...

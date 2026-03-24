@@ -6,6 +6,8 @@ from pathlib import Path
 
 from hnsw_construction import HNSW_NEW
 from hsnw_constructionDARTH import HNSW_DARTH, DummyPredictor
+from hnsw_adaef import HNSW_AdaEF
+from hnsw_pip import HNSW_PiP
 CPP = Path(__file__).parent.parent / 'hnsw_cpp' / 'src' / 'build'
 sys.path.insert(0, str(CPP))
 import hnsw_cpp
@@ -15,6 +17,123 @@ sys.path.insert(0, str(DarthCPP))
 import hnswDarth_cpp
 from hnsw_construction import HNSW_NEW
 faiss.omp_set_num_threads(1)
+
+
+# -------------------------
+# HNSW + PiP
+# -------------------------
+def build_hnsw_pip(Xb, M=16, efC=200, metric='l2', pip_gamma=95.0, pip_delta=20):
+    """
+    Build PiP index.
+
+    PiP changes query-time search termination, not construction,
+    so building is standard HNSW construction with PiP parameters stored
+    in the index object.
+    """
+    Xb = np.asarray(Xb, dtype=np.float32, order='C')
+    d = Xb.shape[1]
+
+    index = HNSW_PiP(
+        dim=d,
+        M=M,
+        efConstruction=efC,
+        metric=metric,
+        pip_gamma=pip_gamma,
+        pip_delta=pip_delta
+    )
+
+    for i, vec in enumerate(Xb):
+        index._insert_(vec, node_id=i)
+
+    return index
+
+
+def hnsw_pip_search_fn(index, efS):
+    """
+    Query-time PiP search.
+    efS is still given, because PiP uses standard HNSW efSearch budget
+    plus early termination based on saturation.
+    """
+    efS = int(efS)
+
+    def _search(Xq, k):
+        Xq = np.asarray(Xq, dtype=np.float32, order='C')
+        D, I = index.search(Xq, k=int(k), efSearch=efS)
+        return D.astype(np.float32), I.astype(np.int32)
+
+    return _search
+
+
+# -------------------------
+# HNSW + Ada-ef
+# -------------------------
+def build_hnsw_adaef(
+    Xb,
+    M=16,
+    efC=200,
+    metric='cosine',
+    adaef_bins=5,
+    adaef_delta=0.001,
+    adaef_sample_size=200,
+    offline_k=10,
+    offline_target_recall=0.95,
+    offline_ef_values=None,
+):
+    """
+    Build Ada-ef index and run the offline preparation phase.
+
+    Important:
+    Ada-ef needs offline preparation:
+    - dataset statistics
+    - ef-estimation table
+
+    So unlike PiP / standard HNSW, building Ada-ef includes an extra offline step.
+    """
+    Xb = np.asarray(Xb, dtype=np.float32, order='C')
+    d = Xb.shape[1]
+
+    index = HNSW_AdaEF(
+        dim=d,
+        M=M,
+        efConstruction=efC,
+        metric=metric
+    )
+
+    # overwrite defaults if your class exposes them as attributes
+    index.adaef_bins = int(adaef_bins)
+    index.adaef_delta = float(adaef_delta)
+    index.adaef_sample_size = int(adaef_sample_size)
+
+    for i, vec in enumerate(Xb):
+        index._insert_(vec, node_id=i)
+
+    if offline_ef_values is None:
+        offline_ef_values = [50, 75, 100, 150, 200, 300, 400, 500]
+
+    index.build_adaef_offline(
+        k=int(offline_k),
+        target_recall=float(offline_target_recall),
+        ef_values=list(offline_ef_values)
+    )
+
+    return index
+
+
+def hnsw_adaef_search_fn(index, target_recall=0.95):
+    """
+    Query-time Ada-ef search.
+
+    Ada-ef does not take efSearch directly.
+    Instead it takes a target recall and estimates ef per query.
+    """
+    target_recall = float(target_recall)
+
+    def _search(Xq, k):
+        Xq = np.asarray(Xq, dtype=np.float32, order='C')
+        D, I = index.search(Xq, k=int(k), target_recall=target_recall)
+        return D.astype(np.float32), I.astype(np.int32)
+
+    return _search
 
 def build_hnsw_darth(Xb, M=16, efC=200, metric='l2'):
     Xb = np.asarray(Xb, dtype=np.float32, order='C')
