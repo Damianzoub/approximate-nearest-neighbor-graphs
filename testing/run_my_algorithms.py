@@ -5,6 +5,12 @@ from utils.read_files import read_fvecs, read_ivecs
 from pathlib import Path
 
 
+def make_sliced_search_fn(full_results):
+    def sliced_search_fn(Xq, k):
+        return full_results[:, :k]
+    return sliced_search_fn
+
+
 def run_benchMark(
     Xb, Xq, I_gt,
     ks=(10,),
@@ -19,14 +25,22 @@ def run_benchMark(
     pip_deltas=(20,),
 ):
     rows = []
+    k_max = max(ks)
 
+    # -------------------------
+    # HNSW
+    # -------------------------
     for M in Ms:
         for efC in efCs:
+            idx = build_hnsw_cpp(Xb, M=M, efC=efC)   # build once
             for efS in efSs:
+                search_fn = hnsw_cpp_search_fn(idx, efS=efS)
+
+                full_results = search_fn(Xq, k_max)
+                sliced_search_fn = make_sliced_search_fn(full_results)
+
                 for k in ks:
-                    idx = build_hnsw_cpp(Xb, M=M, efC=efC)
-                    search_fn = hnsw_cpp_search_fn(idx, efS=efS)
-                    out = measure(search_fn, Xq, k, I_true=I_gt)
+                    out = measure(sliced_search_fn, Xq, k, I_true=I_gt)
                     rows.append({
                         "Method": "hnsw_cpp",
                         "M": M,
@@ -36,16 +50,25 @@ def run_benchMark(
                         **out
                     })
 
+    # -------------------------
+    # DARTH
+    # -------------------------
     for M in Ms:
         for efC in efCs:
+            idx = build_hnsw_darth_cpp(Xb, M=M, efC=efC)   # build once
             for efS in efSs:
-                for k in ks:
-                    idx = build_hnsw_darth_cpp(Xb, M=M, efC=efC)
-                    for Rt in Rts:
-                        for ipi in ipis:
-                            for mpi in mpis:
-                                search_fn = hnsw_darth_cpp_search_fn(idx, efS=efS, Rt=Rt, ipi=ipi, mpi=mpi, predictor=None)
-                                out = measure(search_fn, Xq, k, I_true=I_gt)
+                for Rt in Rts:
+                    for ipi in ipis:
+                        for mpi in mpis:
+                            search_fn = hnsw_darth_cpp_search_fn(
+                                idx, efS=efS, Rt=Rt, ipi=ipi, mpi=mpi, predictor=None
+                            )
+
+                            full_results = search_fn(Xq, k_max)
+                            sliced_search_fn = make_sliced_search_fn(full_results)
+
+                            for k in ks:
+                                out = measure(sliced_search_fn, Xq, k, I_true=I_gt)
                                 rows.append({
                                     "Method": "hnswDarth_cpp",
                                     "M": M,
@@ -58,13 +81,20 @@ def run_benchMark(
                                     **out
                                 })
 
+    # -------------------------
+    # Ada-ef
+    # -------------------------
     for M in Ms:
         for efC in efCs:
-            idx = build_hnsw_adaef_cpp(Xb, M=M, efC=efC)
-            for k in ks:
-                for target_recall in offline_target_recall:
-                    search_fn = hnsw_adaef_cpp_search_fn(idx, target_recall=target_recall)
-                    out = measure(search_fn, Xq, k, I_true=I_gt)
+            idx = build_hnsw_adaef_cpp(Xb, M=M, efC=efC)   # already good
+            for target_recall in offline_target_recall:
+                search_fn = hnsw_adaef_cpp_search_fn(idx, target_recall=target_recall)
+
+                full_results = search_fn(Xq, k_max)
+                sliced_search_fn = make_sliced_search_fn(full_results)
+
+                for k in ks:
+                    out = measure(sliced_search_fn, Xq, k, I_true=I_gt)
                     rows.append({
                         "Method": "hnsw_adaef_cpp",
                         "M": M,
@@ -75,15 +105,25 @@ def run_benchMark(
                         **out
                     })
 
+    # -------------------------
+    # PiP
+    # -------------------------
     for M in Ms:
         for efC in efCs:
-            for efS in efSs:
-                for k in ks:
-                    for pip_gamma in pip_gammas:
-                        for pip_delta in pip_deltas:
-                            idx = build_hnsw_pip_cpp(Xb, M=M, efC=efC, pip_gamma=pip_gamma, pip_delta=pip_delta)
-                            search_fn = hnsw_pip_cpp_search_fn(idx, efS=efS)
-                            out = measure(search_fn, Xq, k, I_true=I_gt)
+            for pip_gamma in pip_gammas:
+                for pip_delta in pip_deltas:
+                    idx = build_hnsw_pip_cpp(
+                        Xb, M=M, efC=efC,
+                        pip_gamma=pip_gamma, pip_delta=pip_delta
+                    )   # build once
+                    for efS in efSs:
+                        search_fn = hnsw_pip_cpp_search_fn(idx, efS=efS)
+
+                        full_results = search_fn(Xq, k_max)
+                        sliced_search_fn = make_sliced_search_fn(full_results)
+
+                        for k in ks:
+                            out = measure(sliced_search_fn, Xq, k, I_true=I_gt)
                             rows.append({
                                 "Method": "hnsw_pip_cpp",
                                 "M": M,
@@ -95,8 +135,7 @@ def run_benchMark(
                                 **out
                             })
 
-    df = create_results_df(rows)
-    return df
+    return create_results_df(rows)
 
 
 if __name__ == "__main__":
@@ -104,9 +143,9 @@ if __name__ == "__main__":
     DATASET_PATH = BASE_DIR / "Datasets"
     RESULTS_PATH = BASE_DIR / "results_csv"
 
-    XB_PATH = f"{DATASET_PATH}/siftsmall/siftsmall_base.fvecs"
-    XQ_PATH = f"{DATASET_PATH}/siftsmall/siftsmall_query.fvecs"
-    GT_PATH = f"{DATASET_PATH}/siftsmall/siftsmall_groundtruth.ivecs"
+    XB_PATH = f"{DATASET_PATH}/sift/sift_base.fvecs"
+    XQ_PATH = f"{DATASET_PATH}/sift/sift_query.fvecs"
+    GT_PATH = f"{DATASET_PATH}/sift/sift_groundtruth.ivecs"
 
     print("Loading datasets...")
     xb = read_fvecs(XB_PATH)
