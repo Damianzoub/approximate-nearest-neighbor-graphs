@@ -3,7 +3,6 @@ import heapq
 import math
 from statistics import NormalDist
 
-
 class HNSW_AdaEF:
     """
     HNSW + Ada-ef
