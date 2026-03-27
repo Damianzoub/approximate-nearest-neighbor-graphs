@@ -1,6 +1,8 @@
 from utils.read_files import read_fvecs, read_ivecs
 from pathlib import Path
-
+from datasets import load_dataset
+from sentence_transformers import SentenceTransformer
+import numpy as np
 DATASET_ROOT = Path("/Users/Damian/approximate-nearest-neighbor-graphs/Datasets")
 
 def load_siftsmall(base_dir):
@@ -91,3 +93,46 @@ def get_dataset()->dict:
     
     return {"dataset_dir": ds_path, **detected}
 
+
+# MS MARCO embeddings 
+def load_ms_marco_embeddings(limit=100000):
+    dataset = load_dataset("ms_marco",'v2.1',split="train[:{}]".format(limit))
+    model = SentenceTransformer("all-MiniLM-L6-v2")
+
+    texts = [x['passage'] for x in dataset]
+    embeddings = model.encode(texts,show_progress_bar=True)
+    return np.array(embeddings,dtype=np.float32)
+
+# generate random
+def generate_random(n=100_000,d=128):
+    return np.random.random((n,d)).astype(np.float32)
+
+
+# glove
+def load_glove(path,max_vectors=None):
+    vectors = []
+    with open(path,"r",encoding="utf-8") as f:
+        for i, line in enumerate(f):
+            if max_vectors and i >= max_vectors:
+                break
+            parts = line.strip().split()
+            vec = np.array(parts[1:],dtype=np.float32)
+            vectors.append(vec)
+    return np.vstack(vectors)
+
+# interface for someone to choose the dataset
+def load_dataset(name):
+    if name == "sift":
+        return read_fvecs("sift_base.fvecs")
+    
+    elif name == "glove":
+        return load_glove("glove.6B.100d.txt")
+    
+    elif name == "msmarco":
+        return load_ms_marco_embeddings(10000)
+    
+    elif name == "random":
+        return generate_random()
+    
+    else:
+        raise ValueError("Unknown dataset")
