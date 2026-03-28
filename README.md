@@ -37,8 +37,8 @@ This repository contains implementations and benchmarks for my thesis on **Appro
 **Description**: Saturation-based early termination that monitors when the top-k result set stops changing.
 
 **Key Features**:
-- Tracks overlap between consecutive iterations: φ_h,l(q) = 100 × |N_{h-1,l}(q) ∩ N_{h,l}(q)| / k
-- Stops when φ ≥ γ for Δ consecutive iterations
+- Tracks overlap between consecutive iterations: \[φ_h,l(q) = 100 × |N_{h-1,l}(q) ∩ N_{h,l}(q)| / k\]
+- Stops when \[φ \ge \gamma \] for Δ consecutive iterations
 - Parameters: `pip_gamma` (γ, saturation threshold), `pip_delta` (Δ, patience)
 
 **Files**:
