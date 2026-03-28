@@ -3,6 +3,7 @@ from pathlib import Path
 from datasets import load_dataset
 from sentence_transformers import SentenceTransformer
 import numpy as np
+import h5py
 DATASET_ROOT = Path("/Users/Damian/approximate-nearest-neighbor-graphs/Datasets")
 
 def load_siftsmall(base_dir):
@@ -107,13 +108,19 @@ def load_ms_marco_embeddings(limit=100000):
 def generate_random(n=100_000,d=128):
     return np.random.random((n,d)).astype(np.float32)
 
+def load_hdf5_ann(path):
+    with h5py.File(path,"r") as f:
+        xb = np.array(f['train'],dtype=np.float32)
+        xq = np.array(f['test'],dtype=np.float32)
+        gt = np.array(f['neighbors'])
+    return xb,xq,gt
 
 # glove
 def load_glove(path,max_vectors=None):
     vectors = []
     with open(path,"r",encoding="utf-8") as f:
         for i, line in enumerate(f):
-            if max_vectors and i >= max_vectors:
+            if max_vectors is not None and i >= max_vectors:
                 break
             parts = line.strip().split()
             vec = np.array(parts[1:],dtype=np.float32)

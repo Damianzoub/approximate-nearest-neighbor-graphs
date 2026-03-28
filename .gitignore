@@ -6,7 +6,12 @@ __pycache__/
 
 
 venv
-/Datasets
+/Datasets/gist960ann/*
+/Datasets/glove6b/*
+/Datasets/glove100ann/*
+/Datasets/msmarco_text/*
+/Datasets/random/*
+/Datasets/sift/*
 # Distribution / packaging
 .Python
 
