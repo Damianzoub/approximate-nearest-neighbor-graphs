@@ -1,3 +1,7 @@
 faiss-cpu
 numpy
 matplotlib
+torchvision
+sentence_transformers
+datasets
+h5py
