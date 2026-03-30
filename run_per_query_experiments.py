@@ -318,24 +318,33 @@ def compute_query_characteristics(
 def run_analysis(
     per_query_results: List[PerQueryResult],
     query_chars: pd.DataFrame
-) -> Dict[str, Any]:
-    """Run failure analysis on results."""
+) -> Tuple[Dict[str, Any], pd.DataFrame]:
+    """Run failure analysis on results.
+    
+    Returns:
+        Tuple of (analysis dict, merged DataFrame with query characteristics)
+    """
     # Convert to DataFrame
     results_df = pd.DataFrame([vars(r) for r in per_query_results])
     
     # Create analyzer
     analyzer = FailureAnalyzer(query_chars, results_df)
     
+    # Merge data (joins query characteristics with results)
+    merged_df = analyzer.merge_data()
+    
     # Run analysis
     patterns = analyzer.analyze_failure_patterns()
     comparison = analyzer.get_method_comparison()
     recommendations = analyzer.recommend_improvements()
     
-    return {
+    analysis = {
         "patterns": patterns,
         "comparison": comparison.to_dict(),
         "recommendations": recommendations
     }
+    
+    return analysis, merged_df
 
 
 def main():
@@ -457,22 +466,16 @@ def main():
     
     # Run analysis
     print("Running failure analysis...")
-    analysis = run_analysis(all_results, query_chars)
+    analysis, merged_df = run_analysis(all_results, query_chars)
     print()
     
     # Save results
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     
-    # Save per-query results
-    results_df = pd.DataFrame([vars(r) for r in all_results])
-    results_file = output_dir / f"per_query_results_{args.dataset}_{timestamp}.csv"
-    results_df.to_csv(results_file, index=False)
-    print(f"Saved per-query results to: {results_file}")
-    
-    # Save query characteristics
-    chars_file = output_dir / f"query_characteristics_{args.dataset}_{timestamp}.csv"
-    query_chars.to_csv(chars_file, index=False)
-    print(f"Saved query characteristics to: {chars_file}")
+    # Save merged results (with query characteristics)
+    merged_file = output_dir / f"per_query_results_merged_{args.dataset}_{timestamp}.csv"
+    merged_df.to_csv(merged_file, index=False)
+    print(f"Saved merged results (with query characteristics) to: {merged_file}")
     
     # Save analysis
     analysis_file = output_dir / f"analysis_{args.dataset}_{timestamp}.json"
