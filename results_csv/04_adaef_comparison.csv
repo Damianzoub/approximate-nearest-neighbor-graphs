@@ -1,0 +1,4 @@
+target_recall,Ada-ef Recall,Ada-ef QPS,Fixed efSearch,Fixed Recall,Fixed QPS,QPS Ratio,Recall Diff
+0.9,0.9900,39.45,50,0.9970,492.88,0.080,-0.0070
+0.95,0.9900,37.72,50,0.9970,492.88,0.077,-0.0070
+0.99,0.9900,41.61,50,0.9970,492.88,0.084,-0.0070
