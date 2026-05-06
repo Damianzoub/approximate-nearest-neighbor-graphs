@@ -111,6 +111,7 @@ hnswDarth_cpp_EXTERNAL_OBJECTS =
 hnswDarth_cpp.cpython-311-darwin.so: CMakeFiles/hnswDarth_cpp.dir/bindings.cpp.o
 hnswDarth_cpp.cpython-311-darwin.so: CMakeFiles/hnswDarth_cpp.dir/hnswDarth.cpp.o
 hnswDarth_cpp.cpython-311-darwin.so: CMakeFiles/hnswDarth_cpp.dir/build.make
+hnswDarth_cpp.cpython-311-darwin.so: /usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/lightgbm/lib/lib_lightgbm.dylib
 hnswDarth_cpp.cpython-311-darwin.so: CMakeFiles/hnswDarth_cpp.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/Damian/approximate-nearest-neighbor-graphs/hnswDarth_cpp/src/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX shared module hnswDarth_cpp.cpython-311-darwin.so"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/hnswDarth_cpp.dir/link.txt --verbose=$(VERBOSE)

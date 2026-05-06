@@ -10,10 +10,8 @@ set(CMAKE_MAKEFILE_DEPENDS
   "CMakeFiles/4.2.1/CMakeSystem.cmake"
   "CMakeLists.txt"
   "pybind11-populate-prefix/tmp/pybind11-populate-mkdirs.cmake"
-  "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeDetermineSystem.cmake"
   "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeGenericSystem.cmake"
   "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeInitializeConfigs.cmake"
-  "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeSystem.cmake.in"
   "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeSystemSpecificInformation.cmake"
   "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeSystemSpecificInitialize.cmake"
   "/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/cmake/data/share/cmake-4.2/Modules/ExternalProject.cmake"
@@ -38,7 +36,6 @@ set(CMAKE_MAKEFILE_OUTPUTS
 
 # Byproducts of CMake generate step:
 set(CMAKE_MAKEFILE_PRODUCTS
-  "CMakeFiles/4.2.1/CMakeSystem.cmake"
   "pybind11-populate-prefix/tmp/pybind11-populate-mkdirs.cmake"
   "pybind11-populate-prefix/tmp/pybind11-populate-gitclone.cmake"
   "pybind11-populate-prefix/src/pybind11-populate-stamp/pybind11-populate-gitinfo.txt"

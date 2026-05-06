@@ -8,6 +8,7 @@
 #include <memory>
 
 #include "hnswDarth.h"
+#include "lgbm_predictor.h"
 
 namespace py = pybind11;
 
@@ -141,12 +142,17 @@ public:
         std::vector<std::vector<float>> Dv;
         std::vector<std::vector<int>>   Iv;
 
+        // Accept either a native LGBMPredictor or a Python callable
         std::unique_ptr<PyPredictor> pyPred;
         const HNSW_DARTH::IPredictor* predPtr = nullptr;
 
         if (!predictor.is_none()) {
-            pyPred = std::make_unique<PyPredictor>(predictor);
-            predPtr = pyPred.get();
+            try {
+                predPtr = predictor.cast<LGBMPredictor*>();
+            } catch (const py::cast_error&) {
+                pyPred  = std::make_unique<PyPredictor>(predictor);
+                predPtr = pyPred.get();
+            }
         }
 
         {
@@ -194,6 +200,30 @@ private:
 };
 
 PYBIND11_MODULE(hnswDarth_cpp, m) {
+    py::class_<LGBMPredictor>(m, "LGBMPredictor",
+        "Native C++ LightGBM predictor for DARTH early termination.\n"
+        "Loads a .txt model file and runs prediction entirely in C++ "
+        "with no Python callbacks on the hot path.\n\n"
+        "Usage::\n\n"
+        "    pred = hnswDarth_cpp.LGBMPredictor('predictor_models/model.txt')\n"
+        "    D, I = index.search_darth(xq, k=10, efSearch=200, Rt=0.90, predictor=pred)")
+        .def(py::init<const std::string&>(), py::arg("model_path"))
+        .def("predict", [](const LGBMPredictor& self, py::dict feats) {
+            HNSW_DARTH::DarthFeatures f;
+            f.ndis       = feats["ndis"].cast<int>();
+            f.nstep      = feats["nstep"].cast<int>();
+            f.ninserts   = feats["ninserts"].cast<int>();
+            f.firstNN    = feats["firstNN"].cast<float>();
+            f.closestNN  = feats["closestNN"].cast<float>();
+            f.furthestNN = feats["furthestNN"].cast<float>();
+            f.meanNN     = feats["meanNN"].cast<float>();
+            f.varNN      = feats["varNN"].cast<float>();
+            f.p25NN      = feats["p25NN"].cast<float>();
+            f.p50NN      = feats["p50NN"].cast<float>();
+            f.p75NN      = feats["p75NN"].cast<float>();
+            return self.predict(f);
+        }, py::arg("feats"));
+
     py::class_<HNSWDarthIndex>(m, "HNSWDarthIndex")
         .def(py::init<int,int,int,const std::string&>(),
              py::arg("dim"), py::arg("M"), py::arg("efConstruction"), py::arg("metric")="l2")

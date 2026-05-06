@@ -287,6 +287,9 @@ FETCHCONTENT_UPDATES_DISCONNECTED_PYBIND11:BOOL=OFF
 //Git command line client
 GIT_EXECUTABLE:FILEPATH=/usr/local/bin/git
 
+//Path to a library.
+LGBM_LIB:FILEPATH=/usr/local/Caskroom/miniconda/base/envs/ann-hnsw/lib/python3.11/site-packages/lightgbm/lib/lib_lightgbm.dylib
+
 //To enforce that a handle_type_name<> specialization exists
 PYBIND11_DISABLE_HANDLE_TYPE_NAME_DEFAULT_IMPLEMENTATION:BOOL=OFF
 

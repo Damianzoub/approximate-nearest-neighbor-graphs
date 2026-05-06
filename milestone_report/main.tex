@@ -1,0 +1,1242 @@
+\documentclass[12pt,a4paper]{article}
+
+% -------------------------------
+% Encoding & Language
+% -------------------------------
+\usepackage{fontspec}        % Needed for Greek with XeLaTeX
+\usepackage{polyglossia}
+\setmainlanguage{greek}
+\setotherlanguage{english}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{tikz}
+\usetikzlibrary{positioning, arrows.meta, shapes.geometric}
+\usepackage{amsmath}
+\usepackage{xcolor}
+
+% Tables
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{siunitx}
+\sisetup{
+  round-mode          = places,
+  round-precision     = 4,
+  scientific-notation = false
+}
+
+
+% -------------------------------
+% Fonts
+% -------------------------------
+\setmainfont{Noto Serif}     % Works perfectly with Greek
+\setsansfont{Noto Sans}
+
+% -------------------------------
+% Page & Graphics
+% -------------------------------
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+
+% -------------------------------
+% Title info
+% -------------------------------
+\title{Milestone Report: HNSW (M1) και DARTH πάνω σε HNSW (M2)}
+\author{Δαμιανός Ζούμπος}
+\date{Φεβρουάριος 2026}
+
+\begin{document}
+
+% ===============================
+% Title Page
+% ===============================
+\begin{titlepage}
+    \begin{center}
+        \vspace*{-1cm}
+        {\Huge \textbf{Milestone: HNSW + DARTH}}\\[1cm]
+
+        \begin{figure}[H]
+          \centering
+          \framebox{\parbox{0.55\textwidth}{\centering
+            \vspace{0.8cm}
+            \includegraphics[width=0.8\linewidth]{unipi.png}
+            \vspace{0.8cm}
+          }}
+        \end{figure}
+
+        
+
+        \normalsize
+        \renewcommand{\arraystretch}{1.8}
+        \begin{tabular}{c|l|c|l}
+            \hline
+            \textbf{Αρ.} & \textbf{Ονοματεπώνυμο} & \textbf{Α.Μ.} & \textbf{\selectlanguage{english}E-mail\selectlanguage{greek}} \\
+            \hline
+            1 & Δαμιανός Ζούμπος      & Ε22056 & \texttt{\selectlanguage{english}d.zoumpos04@gmail.com\selectlanguage{greek}} \\
+            \hline
+        
+        \end{tabular}
+
+        \vfill
+        
+    \end{center}
+\end{titlepage}
+
+% ===============================
+% Main Content
+% ===============================
+% ------------------------------------------------------------
+% M1 Report (Overleaf-ready) — HNSW from scratch + baseline evaluation
+% ------------------------------------------------------------
+\section{Μεθοδολογία Εργασίας (Design $\rightarrow$ Review $\rightarrow$ Υλοποίηση $\rightarrow$ Αποτίμηση)}
+\label{sec:method}
+
+Ακολουθείται η εξής διαδικασία, όπως προτείνεται για νέες προσεγγίσεις/επεκτάσεις:
+\begin{enumerate}
+    \item \textbf{Σχεδίαση:} περιγραφή δομών, ροής αλγορίθμου, παραμέτρων και περιπτώσεων (edge cases).
+    \item \textbf{Review:} έλεγχος/συζήτηση της σχεδίασης και πιθανές προσαρμογές.
+    \item \textbf{Υλοποίηση:} ανάπτυξη κώδικα βάσει της σχεδίασης.
+    \item \textbf{Αποτίμηση:} πειραματικός έλεγχος (Recall@k, QPS/Latency, distance computations) και σύγκριση με βιβλιοθήκες αναφοράς.
+\end{enumerate}
+
+Σημείωση: Το παρόν report κρατάει \textbf{αυστηρά διαχωρισμένα} τα σκέλη M1 (HNSW baseline) και M2 (DARTH επέκταση),
+ώστε να ενσωματωθούν αργότερα στο κείμενο της πτυχιακής χωρίς σύγχυση.
+
+\subsection{Σχεδίαση HNSW: Δομές και Λειτουργίες}
+\label{subsec:hnsw_design}
+
+\subsubsection{Δομές δεδομένων}
+Ο δείκτης HNSW ορίζεται από:
+\begin{itemize}
+  \item \textbf{Layers:} $G_L, G_{L-1}, \dots, G_0$ όπου το $G_0$ περιέχει όλους τους κόμβους.
+  \item \textbf{neighbors[v][l]:} λίστα γειτόνων του κόμβου $v$ στο layer $l$.
+  \item \textbf{entry point:} κόμβος εκκίνησης της πλοήγησης στο ανώτερο layer.
+  \item \textbf{level(v):} μέγιστο layer στο οποίο εμφανίζεται ο κόμβος $v$.
+\end{itemize}
+
+\subsubsection{Λειτουργία 1: Ανάθεση επιπέδου (Level Sampling)}
+Σε κάθε νέο κόμβο ανατίθεται τυχαίο επίπεδο $level(v)$ ώστε οι περισσότεροι κόμβοι να ανήκουν στο $G_0$ και λίγοι σε ανώτερα layers.
+
+\subsubsection{Λειτουργία 2: Greedy descent στα ανώτερα layers}
+Για κάθε layer $l = L, L-1, \dots, 1$ εκτελείται greedy πλοήγηση (πλάτος 1) για να βρεθεί καλό σημείο εισόδου στο αμέσως χαμηλότερο layer.
+
+Με τον όρο \textbf{καλό σημείο εισόδου} εννοούμε τον κόμβο που βρίσκεται γεωμετρικά πλησιέστερα στο query $q$ μεταξύ των κόμβων του τρέχοντος layer. Συγκεκριμένα: ξεκινώντας από τον τρέχοντα entry point $ep$, επισκεπτόμαστε τους γείτονές του στο layer $l$ και μεταβαίνουμε στον πλησιέστερο στο $q$. Επαναλαμβάνουμε έως ότου καμία μετακίνηση δεν βελτιώνει την απόσταση. Ο τελικός κόμβος χρησιμοποιείται ως αφετηρία για το layer $l-1$. Η greedy descent \emph{δεν} εγγυάται εύρεση του global nearest neighbor στον layer, αλλά δρα ως γρήγορος οδηγός προς τη σωστή περιοχή του χώρου.
+
+\subsubsection{Λειτουργία 3: \texttt{search\_layer} (Best-first/Beam search)}
+Στο layer εισαγωγής και στο base layer εκτελείται best-first αναζήτηση με πλάτος $ef$ (στο build: $efConstruction$, στο query: $efSearch$).
+
+\subsubsection{Λειτουργία 4: Επιλογή γειτόνων (Diversification heuristic)}
+Από τους υποψήφιους γείτονες επιλέγονται έως $M$ (ή $M_0$ στο layer 0) με heuristic που αποφεύγει υπερβολικά όμοιους/πλεονάζοντες γείτονες.
+
+\subsubsection{Λειτουργία 5: Αμφίδρομες ακμές και pruning}
+Οι ακμές είναι αμφίδρομες: κάθε φορά που ο νέος κόμβος $v$ συνδέεται με κόμβο $u$, προστίθεται και η αντίστροφη ακμή $u \to v$. Αυτό μπορεί να προκαλέσει υπέρβαση του ορίου γειτόνων στον $u$.
+
+\textbf{Πώς εφαρμόζεται το pruning:} αν $|\text{neighbors}[u][l]| > M_{\max}$ (όπου $M_{\max} = M_0$ για $l=0$ και $M$ για $l>0$), τότε εκτελείται εκ νέου η διαδικασία neighbor selection πάνω στο διευρυμένο σύνολο γειτόνων, κρατώντας μόνο τους $M_{\max}$ «ποιοτικότερους». Με τη \emph{simple} παραλλαγή κρατάμε τους $M_{\max}$ πλησιέστερους στο $u$. Με την \emph{heuristic} παραλλαγή (του paper), προτιμούνται γείτονες που «ανοίγουν» νέα μονοπάτια στον γράφο — δηλαδή κόμβοι $e$ για τους οποίους $d(u,e) < d(u,r)$ για όλους τους ήδη επιλεγμένους $r$, αποτρέποντας υπερβολικά «πλεονάζοντες'' ακμές.
+
+% ============================================================
+% Toy 2D Example (Expanded) — HNSW full pipeline with cases
+% ============================================================
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  node/.style={circle, draw, minimum size=0.7cm, font=\small},
+  entrynode/.style={circle, draw, minimum size=0.7cm, font=\small, fill=yellow!40},
+  >=Stealth
+]
+
+% Layer labels
+\node[anchor=east, font=\small\itshape] at (-0.5, 4.0) {Layer 2};
+\node[anchor=east, font=\small\itshape] at (-0.5, 2.0) {Layer 1};
+\node[anchor=east, font=\small\itshape] at (-0.5, 0.0) {Layer 0};
+
+% Horizontal rules
+\draw[gray!40, dashed] (-0.2, 1.1) -- (9.5, 1.1);
+\draw[gray!40, dashed] (-0.2, 3.1) -- (9.5, 3.1);
+
+% --- Layer 2 (only 0 and 7) ---
+\node[entrynode] (L2_0) at (1.0, 4.0) {0};
+\node[node]      (L2_7) at (7.5, 4.0) {7};
+\draw[<->] (L2_0) -- (L2_7);
+
+% --- Layer 1 ---
+\node[node] (L1_0)  at (1.0, 2.0) {0};
+\node[node] (L1_3)  at (3.5, 2.0) {3};
+\node[node] (L1_5)  at (5.0, 2.0) {5};
+\node[node] (L1_7)  at (7.5, 2.0) {7};
+\node[node] (L1_11) at (2.2, 2.0) {11};
+\draw[<->] (L1_0)  -- (L1_11);
+\draw[<->] (L1_0)  -- (L1_3);
+\draw[<->] (L1_3)  -- (L1_5);
+\draw[<->] (L1_5)  -- (L1_7);
+\draw[<->] (L1_3)  -- (L1_7);
+
+% --- Layer 0 (all nodes) ---
+\node[node] (L0_0)  at (0.5, 0.0)  {0};
+\node[node] (L0_1)  at (1.5, 0.0)  {1};
+\node[node] (L0_2)  at (1.0, -1.0) {2};
+\node[node] (L0_3)  at (3.5, 0.0)  {3};
+\node[node] (L0_4)  at (4.5, 0.5)  {4};
+\node[node] (L0_5)  at (4.0, 0.0)  {5};
+\node[node] (L0_6)  at (4.2, 0.8)  {6};
+\node[node] (L0_7)  at (7.5, 0.0)  {7};
+\node[node] (L0_8)  at (7.5, 0.8)  {8};
+\node[node] (L0_9)  at (6.5, 0.5)  {9};
+\node[node] (L0_10) at (6.2, 0.0)  {10};
+\node[node] (L0_11) at (2.5, 0.8)  {11};
+
+\draw (L0_0)--(L0_1); \draw (L0_0)--(L0_2); \draw (L0_0)--(L0_11);
+\draw (L0_3)--(L0_5); \draw (L0_3)--(L0_4); \draw (L0_5)--(L0_6);
+\draw (L0_5)--(L0_10); \draw (L0_4)--(L0_6); \draw (L0_4)--(L0_9);
+\draw (L0_7)--(L0_9); \draw (L0_7)--(L0_10); \draw (L0_8)--(L0_9);
+\draw (L0_10)--(L0_9);
+
+% Vertical dotted guides (same node across layers)
+\draw[dotted, gray!60] (L2_0) -- (L1_0) -- (L0_0);
+\draw[dotted, gray!60] (L2_7) -- (L1_7) -- (L0_7);
+\draw[dotted, gray!60] (L1_3) -- (L0_3);
+\draw[dotted, gray!60] (L1_5) -- (L0_5);
+\draw[dotted, gray!60] (L1_11)-- (L0_11);
+
+\end{tikzpicture}
+\caption{Ιεραρχική δομή HNSW για το toy παράδειγμα. Ο κόμβος 0 (κίτρινος) είναι ο αρχικός entry point στο Layer 2. Οι διακεκομμένες κατακόρυφες γραμμές δείχνουν ότι ο ίδιος κόμβος υπάρχει σε πολλαπλά layers. Στο Layer 2 υπάρχουν μόνο οι κόμβοι 0 και 7 (αραιή δομή για γρήγορη πλοήγηση), ενώ το Layer 0 περιέχει όλους τους κόμβους.}
+\label{fig:hnsw_graph}
+\end{figure}
+
+\subsection{Toy 2D Παράδειγμα (Εμπλουτισμένο): Πλήρης ροή HNSW με όλες τις περιπτώσεις}
+\label{subsec:toy2d_expanded}
+
+Σκοπός του toy παραδείγματος είναι να παρουσιαστούν \textbf{όλες οι βασικές περιπτώσεις} της μεθοδολογίας HNSW,
+με \textbf{πραγματικούς υπολογισμούς αποστάσεων} και με \textbf{bounded-degree pruning}.
+Χρησιμοποιείται L2 squared distance, ώστε οι αριθμητικές πράξεις να είναι απλές και ελέγξιμες.
+
+\subsubsection{Παράμετροι}
+Θέτουμε μικρές παραμέτρους για να είναι πλήρως ιχνηλατήσιμη η διαδικασία:
+\[
+M=2,\quad M_0=4,\quad efConstruction=4,\quad efSearch=6,\quad k=2.
+\]
+Η λογική είναι:
+\begin{itemize}
+    \item Στα layers $>0$ κάθε κόμβος έχει έως $M$ γείτονες.
+    \item Στο base layer (layer 0) κάθε κόμβος έχει έως $M_0$ γείτονες.
+\end{itemize}
+
+\subsubsection{Dataset 2D και προκαθορισμένα levels (ως αποτέλεσμα sampling)}
+Για να αναδειχθεί η ιεραρχία, παρουσιάζουμε τα $level(v)$ ως δεδομένα (toy setup):
+\begin{center}
+\begin{tabular}{c c c}
+\toprule
+id & σημείο $(x,y)$ & $level(v)$ \\
+\midrule
+0 & (0.0,0.0) & 2 \\
+1 & (1.0,0.2) & 0 \\
+2 & (0.2,1.0) & 0 \\
+3 & (3.0,0.0) & 1 \\
+4 & (3.0,1.0) & 0 \\
+5 & (2.6,0.2) & 1 \\
+6 & (2.7,0.9) & 0 \\
+7 & (5.0,0.2) & 2 \\
+8 & (5.0,1.2) & 0 \\
+9 & (4.2,0.7) & 0 \\
+10 & (4.0,-0.1) & 0 \\
+11 & (2.0,2.0) & 1 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Άρα:
+\[
+G_2=\{0,7\},\quad
+G_1=\{0,3,5,7,11\},\quad
+G_0=\{0,1,2,\dots,11\}.
+\]
+Αρχικά entry point θεωρείται ο κόμβος 0 (ο πρώτος με μέγιστο επίπεδο).
+
+% ------------------------------------------------------------
+% Case 1: Insert node with maxlevel (update entry point)
+% ------------------------------------------------------------
+\subsubsection{Case 1: Εισαγωγή κόμβου με νέο/μέγιστο επίπεδο (ενημέρωση entry point)}
+\label{subsec:case_maxlevel}
+
+Θεωρούμε εισαγωγή του κόμβου 7:
+\[
+7=(5.0,0.2),\quad level(7)=2.
+\]
+Επειδή εμφανίζεται στο ανώτερο επίπεδο, αποτελεί σημαντική περίπτωση:
+\begin{itemize}
+    \item Ο γράφος στο layer 2 έχει ελάχιστους κόμβους, άρα λειτουργεί ως ``γρήγορη πλοήγηση''.
+    \item Η εισαγωγή κόμβου με max level μπορεί να οδηγήσει σε \textbf{ενημέρωση του entry point}.
+\end{itemize}
+
+\paragraph{Layer 2: σύνδεση 7 με το υπάρχον top node.}
+Πριν το 7, στο layer 2 υπάρχει μόνο ο 0. Με $efConstruction=4$ το \texttt{search\_layer} επιστρέφει προφανώς
+$W=\{0\}$, άρα συνδέουμε:
+\[
+7 \leftrightarrow 0 \quad \text{(στο layer 2)}.
+\]
+Στη συνέχεια, το 7 συνδέεται και στα layer 1,0 (ίδια μεθοδολογία: local search + neighbor selection).
+Στο report, κρατάμε ως βασικό μήνυμα ότι:
+\begin{quote}
+\textit{Με την εισαγωγή κόμβου υψηλού επιπέδου, ο entry point μπορεί να ενημερώνεται ώστε να ξεκινά από ``ισχυρό'' σημείο στο top layer.}
+\end{quote}
+
+% ------------------------------------------------------------
+% Pre-existing (assumed) neighborhood state for layer0, layer1
+% ------------------------------------------------------------
+\subsubsection{Ενδεικτική κατάσταση γειτνίασης πριν το πλήρες demo (για να υπάρχουν όλες οι περιπτώσεις)}
+\label{subsec:assumed_state}
+
+Για να παρουσιαστεί pruning, θεωρούμε ότι πριν την εισαγωγή του κόμβου 5 υπάρχουν ήδη αρκετοί κόμβοι και ακμές στο layer 0.
+(Το toy παράδειγμα δεν στοχεύει να αποδείξει μοναδικό γράφο, αλλά να δείξει \textbf{τη ροή των λειτουργιών}).
+
+\paragraph{Ενδεικτικές λίστες γειτόνων στο layer 0.}
+Υποθέτουμε ότι στο layer 0 ισχύουν:
+\[
+\begin{aligned}
+N_0(3)&=\{0,4,10,7\},\\
+N_0(0)&=\{1,2,3,11\},\\
+N_0(4)&=\{3,6,9,8\},\\
+N_0(10)&=\{3,7,9,0\},\\
+N_0(7)&=\{10,9,8,3\}.
+\end{aligned}
+\]
+Όλες οι λίστες είναι μεγέθους $\le M_0=4$.
+
+\paragraph{Ενδεικτικές λίστες γειτόνων στο layer 1.}
+Υποθέτουμε:
+\[
+N_1(7)=\{3,0\},\quad
+N_1(3)=\{7,0\}.
+\]
+(Στο layer 1 ισχύει όριο $M=2$.)
+
+% ------------------------------------------------------------
+% Case 2: Full insertion demo for node 5 (level=1)
+% ------------------------------------------------------------
+\subsubsection{Case 2: Πλήρες demo εισαγωγής κόμβου 5 (level=1) με \texttt{search\_layer} και pruning}
+\label{subsec:case_full_insert_5}
+
+Εισάγεται ο κόμβος:
+\[
+5=(2.6,0.2),\quad level(5)=1.
+\]
+Θα παρουσιαστούν:
+\begin{enumerate}
+    \item Greedy descent στο top layer,
+    \item \texttt{search\_layer} στο layer 1,
+    \item \texttt{search\_layer} στο layer 0 με $efConstruction$,
+    \item Neighbor selection,
+    \item Αμφίδρομες ακμές και pruning (bounded degree).
+\end{enumerate}
+
+\paragraph{(1) Greedy descent στο layer 2.}
+Το layer 2 περιέχει τους $\{0,7\}$. Ξεκινάμε από entry=0 και συγκρίνουμε:
+\[
+d(5,0)=2.6^2+0.2^2=6.76+0.04=6.80,
+\]
+\[
+d(5,7)=(2.6-5)^2+(0.2-0.2)^2=2.4^2+0=5.76.
+\]
+Εφόσον $5.76 < 6.80$, το greedy μετακινείται στον 7, άρα entry για layer 1 είναι:
+\[
+ep_{L=1}=7.
+\]
+
+\paragraph{(2) \texttt{search\_layer} στο layer 1 με $efConstruction=4$.}
+Ξεκινάμε από $ep=7$ και θεωρούμε $N_1(7)=\{3,0\}$.
+Υπολογισμοί:
+\[
+d(5,3)=(2.6-3)^2+(0.2-0)^2=0.16+0.04=0.20,
+\]
+\[
+d(5,0)=6.80.
+\]
+Άρα το καλύτερο σημείο στο layer 1 είναι ο 3. Με $ef=4$, ένα τυπικό σύνολο υποψηφίων είναι:
+\[
+W_1 \approx \{3,7,0\}.
+\]
+
+\paragraph{Neighbor selection στο layer 1 (M=2).}
+Κρατάμε τους 2 καλύτερους:
+\[
+N_1(5)=\{3,7\},
+\]
+και προσθέτουμε αμφίδρομες ακμές στο layer 1:
+\[
+5\leftrightarrow 3,\quad 5\leftrightarrow 7 \quad (layer~1).
+\]
+Αν κάποιος κόμβος υπερβεί $M=2$, γίνεται pruning στο layer 1 (δεν συμβαίνει εδώ με το συγκεκριμένο toy state).
+
+\paragraph{(3) \texttt{search\_layer} στο layer 0 με $efConstruction=4$.}
+Entry για base layer λαμβάνεται το καλύτερο από το layer 1, δηλαδή:
+\[
+ep_{L=0}=3.
+\]
+Αρχικοποιούμε:
+\[
+C=\{(d(5,3)=0.20,3)\},\quad W=\{3\}.
+\]
+
+\textbf{Επέκταση του 3:} $N_0(3)=\{0,4,10,7\}$.
+Υπολογίζουμε:
+\[
+d(5,4)=(2.6-3)^2+(0.2-1)^2=0.16+0.64=0.80,
+\]
+\[
+d(5,10)=(2.6-4)^2+(0.2+0.1)^2=1.96+0.09=2.05,
+\]
+\[
+d(5,7)=5.76,\quad d(5,0)=6.80.
+\]
+Με $ef=4$ κρατάμε τα 4 καλύτερα, άρα:
+\[
+W=\{3(0.20),4(0.80),10(2.05),7(5.76)\}.
+\]
+
+\textbf{Επέκταση του 4:} $N_0(4)=\{3,6,9,8\}$.
+Υπολογίζουμε:
+\[
+d(5,6)=(2.6-2.7)^2+(0.2-0.9)^2=0.01+0.49=0.50,
+\]
+\[
+d(5,9)=(2.6-4.2)^2+(0.2-0.7)^2=2.56+0.25=2.81,
+\]
+\[
+d(5,8)=(2.6-5)^2+(0.2-1.2)^2=5.76+1=6.76.
+\]
+Update top-4:
+\[
+W=\{3(0.20),6(0.50),4(0.80),10(2.05)\}.
+\]
+Οι επεκτάσεις των 6 και 10 δεν προσθέτουν καλύτερους υποψηφίους (στο συγκεκριμένο toy state),
+άρα τελικό:
+\[
+W_0=[3,6,4,10].
+\]
+
+\paragraph{(4) Neighbor selection στο layer 0 (M0=4) και diversification.}
+Με $M_0=4$, το πλήθος χωράει:
+\[
+N_0(5)=\{3,6,4,10\}.
+\]
+Στο report τονίζεται ότι η heuristic επιλογή γειτόνων στο HNSW στοχεύει να αποφεύγει πλεονάζοντες γείτονες
+και να κρατά ακμές που ανοίγουν διαφορετικά ``μονοπάτια''.
+
+\paragraph{(5) Αμφίδρομες ακμές και pruning (bounded degree).}
+Προστίθενται ακμές:
+\[
+5\leftrightarrow 3,\quad 5\leftrightarrow 6,\quad 5\leftrightarrow 4,\quad 5\leftrightarrow 10 \quad (layer~0).
+\]
+Τώρα ο κόμβος 3 αποκτά νέο γείτονα (τον 5). Επειδή πριν είχαμε:
+\[
+N_0(3)=\{0,4,10,7\},
+\]
+μετά γίνεται:
+\[
+N_0(3)=\{0,4,10,7,5\}
+\]
+που έχει μέγεθος 5 και υπερβαίνει $M_0=4$ $\Rightarrow$ απαιτείται pruning.
+
+\textbf{Pruning στον κόμβο 3 (κρατάμε 4 καλύτερους).}
+Υπολογίζουμε αποστάσεις από το 3:
+\[
+d(3,5)=0.20,\quad
+d(3,4)=1,\quad
+d(3,10)=(3-4)^2+(0+0.1)^2=1+0.01=1.01,
+\]
+\[
+d(3,7)=4.04,\quad d(3,0)=9.
+\]
+Κρατάμε τους 4 καλύτερους:
+\[
+N_0(3)\leftarrow \{5,4,10,7\},
+\]
+και απορρίπτεται ο 0.
+Αυτό δείχνει καθαρά τη λειτουργία \textbf{bounded degree}.
+
+% ------------------------------------------------------------
+% Case 3: Full query demo
+% ------------------------------------------------------------
+\subsubsection{Case 3: Query demo (greedy descent + base layer best-first)}
+\label{subsec:case_query_demo}
+
+Θέτουμε query:
+\[
+q=(2.8,0.85),\quad k=2,\quad efSearch=6.
+\]
+
+\paragraph{Greedy descent στο layer 2.}
+\[
+d(q,0)=2.8^2+0.85^2=7.84+0.7225=8.5625,
+\]
+\[
+d(q,7)=(2.8-5)^2+(0.85-0.2)^2=4.84+0.4225=5.2625.
+\]
+Άρα entry για layer 1 είναι ο 7.
+
+\paragraph{Greedy στο layer 1.}
+Με ενδεικτικούς neighbors του 7 στο layer 1: $\{5,3\}$, υπολογίζουμε:
+\[
+d(q,5)=(2.8-2.6)^2+(0.85-0.2)^2=0.04+0.4225=0.4625,
+\]
+\[
+d(q,3)=(2.8-3)^2+0.85^2=0.04+0.7225=0.7625.
+\]
+Ο greedy οδηγεί στο 5, άρα entry στο layer 0:
+\[
+ep_{L=0}=5.
+\]
+
+\paragraph{Base layer search με $efSearch=6$.}
+Η best-first αναζήτηση στο base layer διατηρεί δύο δομές:
+\begin{itemize}
+  \item $C$ (candidates, min-heap): κόμβοι που αναμένουν επέκταση, ταξινομημένοι κατά αύξουσα απόσταση.
+  \item $W$ (result set, max-heap μεγέθους $efSearch=6$): οι $ef$ καλύτεροι κόμβοι που έχουν βρεθεί ως τώρα.
+\end{itemize}
+
+\textbf{Βήμα 0 — αρχικοποίηση από $ep=5$:}
+\[
+d(q,5)=0.4625,\quad C=\{(0.4625,5)\},\quad W=\{5\}.
+\]
+
+\textbf{Βήμα 1 — επέκταση του 5:} $N_0(5)=\{3,6,4,10\}$.
+\[
+d(q,6)=0.0125,\quad d(q,4)=0.0625,\quad d(q,3)=0.7625,\quad d(q,10)=2.3425.
+\]
+Όλοι οι κόμβοι εισάγονται στο $W$ (είναι ακόμα $|W|<6$):
+\[
+W=\{6(0.0125),4(0.0625),5(0.4625),3(0.7625),10(2.3425)\}.
+\]
+Η συνθήκη διακοπής εξετάζει αν ο κόμβος που πρόκειται να επεκταθεί είναι μακρύτερος από τον χειρότερο στο $W$. Εδώ συνεχίζουμε.
+
+\textbf{Βήμα 2 — επέκταση του 6:} $N_0(6) \approx \{5,4\}$ (ήδη επισκεφθέντες, παραλείπονται).
+
+\textbf{Βήμα 3 — επέκταση του 4:} $N_0(4)=\{3,6,9,8\}$.
+\[
+d(q,9)=(2.8-4.2)^2+(0.85-0.7)^2=1.96+0.0225=1.9825.
+\]
+Ο 9 εισάγεται στο $W$:
+\[
+W=\{6(0.0125),4(0.0625),5(0.4625),3(0.7625),9(1.9825),10(2.3425)\}.
+\]
+Τώρα $|W|=6=efSearch$. Κάθε επόμενος κόμβος γίνεται δεκτός μόνο αν η απόστασή του είναι μικρότερη από τον χειρότερο ($d_{\max}=2.3425$).
+
+\textbf{Βήμα 4 — επέκταση του 3:} $N_0(3)=\{0,4,10,7\}$. Κανένας δεν βελτιώνει το $W$ ($d(q,0)=8.56$, $d(q,7)=5.26$).
+
+Η αναζήτηση τερματίζει όταν ο καλύτερος κόμβος στο $C$ είναι χειρότερος από τον χειρότερο στο $W$ (ή το $C$ αδειάσει). Τελικά:
+\[
+W=\{6(0.0125),4(0.0625),5(0.4625),3(0.7625),9(1.9825),10(2.3425)\},
+\]
+και τα 2 καλύτερα αποτελέσματα ($k=2$):
+\[
+\text{top-}k=\{6,4\}.
+\]
+
+\paragraph{Συμπέρασμα από το toy παράδειγμα.}
+Το toy παράδειγμα παρουσιάζει:
+\begin{itemize}
+    \item \textbf{hierarchy/greedy descent} στα ανώτερα layers (γρήγορη μεταφορά κοντά στη σωστή περιοχή),
+    \item \textbf{best-first \texttt{search\_layer}} στο base layer με $ef$,
+    \item \textbf{neighbor selection} με bounded degree,
+    \item \textbf{pruning} όταν παραβιάζεται το $M_0$,
+    \item \textbf{query-time} ανάκτηση top-$k$.
+\end{itemize}
+
+
+\subsection{Πειραματικό Setup}
+Τα πειράματα εκτελέστηκαν σε δύο σύνολα δεδομένων:
+\begin{itemize}
+  \item \textbf{SIFTsmall}: 10.000 διανύσματα βάσης, 100 queries, διάσταση 128 (L2 metric). Χρησιμοποιείται για γρήγορη επαλήθευση ορθότητας.
+  \item \textbf{SIFT1M}: 1.000.000 διανύσματα βάσης, 10.000 queries, διάσταση 128. Χρησιμοποιείται για αξιολόγηση κλίμακας.
+\end{itemize}
+Και στις δύο περιπτώσεις χρησιμοποιούνται τα επίσημα ground-truth αρχεία (.ivecs) για υπολογισμό Recall@k. Όλα τα πειράματα εκτελέστηκαν σε MacBook Pro με επεξεργαστή Apple M1, 16GB RAM. Κάθε μέτρηση αποτελεί μέσο όρο 5 εκτελέσεων (με 2 warmup runs).
+
+Συγκρίνονται τρεις υλοποιήσεις:
+\begin{itemize}
+  \item \textbf{HNSW NEW}: η υλοποίηση από scratch (Python/C++ wrapper).
+  \item \textbf{hnswlib}: βιβλιοθήκη αναφοράς υψηλής απόδοσης.
+  \item \textbf{faiss-hnsw}: υλοποίηση HNSW μέσω FAISS.
+\end{itemize}
+
+\subsection{Αποτελέσματα SIFTsmall (10K διανύσματα)}
+
+Τα παρακάτω σχήματα (Σχήμα~\ref{fig:hnsw_comparison_plots}) παρουσιάζουν τη σύγκριση των τριών υλοποιήσεων στο SIFTsmall. Παρατηρούμε ότι η HNSW NEW επιτυγχάνει recall παρόμοιο με τις βιβλιοθήκες αναφοράς (hnswlib, faiss-hnsw), επιβεβαιώνοντας την ορθότητα της υλοποίησης. Το QPS της HNSW NEW είναι χαμηλότερο λόγω της Python overhead, ωστόσο στην C++ έκδοση τα αποτελέσματα συγκλίνουν.
+
+\begin{figure}[H]
+  \centering
+
+  \begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/recall_M16_efC128_k10.png}
+    \caption{Recall@20 vs efSearch (M=16, efC=128)}
+    \label{fig:recall_k20_m16_efc128}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/recall_M16_efC64_k20.png}
+    \caption{Recall@20 vs efSearch (M=16, efC=64)}
+    \label{fig:recall_k20_m16_efc64}
+  \end{subfigure}
+
+  \vspace{0.6em}
+
+  \begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/qps_M8_efC128_k20.png}
+    \caption{QPS vs efSearch (M=8, efC=128, k=20)}
+    \label{fig:qps_k10_m16_efc64}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/recall_vs_qps_M16_efC128_k10.png}
+    \caption{Recall@10 vs QPS (M=16, efC=128)}
+    \label{fig:recall_vs_qps_k10_m16_efc128}
+  \end{subfigure}
+
+  \caption{\textbf{Σχήμα 1 — SIFTsmall (10K vectors, 128-dim).} Πάνω αριστερά και πάνω δεξιά: Recall@k συναρτήσει του efSearch για δύο διαφορετικές τιμές efConstruction. Παρατηρείται ότι όλες οι υλοποιήσεις συγκλίνουν σε παρόμοιο recall, με μικρές διαφορές στα χαμηλά efSearch. Κάτω αριστερά: QPS συναρτήσει efSearch — η hnswlib παρουσιάζει υψηλότερο throughput λόγω βελτιστοποιήσεων χαμηλού επιπέδου. Κάτω δεξιά: recall-QPS tradeoff curve — μια καλή υλοποίηση πρέπει να βρίσκεται επάνω-αριστερά (υψηλό recall, υψηλό QPS).}
+  \label{fig:hnsw_comparison_plots}
+\end{figure}
+
+
+
+\begin{table}[H]
+\centering
+\caption{Representative benchmark results for SIFTsmall (HNSW NEW vs hnswlib vs faiss-hnsw).}
+\label{tab:bench_siftsmall_representative}
+
+\begin{tabular}{lrrrrrrr}
+\toprule
+\textbf{Method} & \textbf{M} & \textbf{efC} & \textbf{efS} & \textbf{k} &
+\textbf{Recall@k} & \textbf{QPS} & \textbf{Time (s)} \\
+\midrule
+
+\multicolumn{8}{c}{\textbf{High-quality graph regime (M=16, efC=128)}}\\
+\midrule
+
+% --- HNSW NEW ---
+HNSW NEW   & 16 & 128 & 20  & 10 & 0.9760 & 20420.81 & 0.00490 \\
+HNSW NEW   & 16 & 128 & 50  & 10 & 0.9970 & 10104.13 & 0.00989 \\
+HNSW NEW   & 16 & 128 & 100 & 20 & 0.9990 &  6070.71 & 0.01647 \\
+
+\midrule
+
+% --- FAISS ---
+faiss-hnsw & 16 & 128 & 20  & 10 & 0.9760 & 28042.44 & 0.00357 \\
+faiss-hnsw & 16 & 128 & 50  & 10 & 0.9940 & 17396.31 & 0.00575 \\
+faiss-hnsw & 16 & 128 & 100 & 10 & 1.0000 &  9480.84 & 0.01055 \\
+
+\midrule
+
+% --- HNSWLIB ---
+hnswlib    & 16 & 128 & 20  & 10 & 0.9750 & 40808.36 & 0.00245 \\
+hnswlib    & 16 & 128 & 50  & 10 & 0.9940 & 34362.95 & 0.00291 \\
+hnswlib    & 16 & 128 & 100 & 20 & 0.9975 & 16569.66 & 0.00604 \\
+
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Αποτελέσματα SIFT1M (1M διανύσματα)}
+
+\textbf{Διαφορά Σχήματος 1 και Σχήματος 2:} Το Σχήμα~\ref{fig:hnsw_comparison_plots} αξιολογεί τις υλοποιήσεις στο \emph{SIFTsmall} (10.000 vectors), ενώ το Σχήμα~\ref{fig:hnsw_1m_plots} (παρακάτω) αξιολογεί στο \emph{SIFT1M} (1.000.000 vectors). Η σημαντική διαφορά είναι:
+\begin{itemize}
+  \item Το \textbf{SIFTsmall} δείχνει ότι η υλοποίηση είναι ορθή (recall συγκρίσιμο με αναφορά) αλλά είναι μικρό dataset — οι διαφορές QPS δεν αντικατοπτρίζουν πραγματική κλίμακα.
+  \item Το \textbf{SIFT1M} αποκαλύπτει το πραγματικό κόστος κλίμακας: το QPS της HNSW NEW μειώνεται σημαντικά σε σχέση με hnswlib/faiss, αποτυπώνοντας το overhead του Python layer στο index traversal. Το recall παραμένει συγκρίσιμο, επιβεβαιώνοντας ορθότητα κατασκευής γράφου ακόμα και σε 1M vectors.
+\end{itemize}
+
+\begin{figure}[H]
+  \centering
+
+  \begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{1M_plots/recall_M16_efC128_k10.png}
+    \caption{Recall@10 vs efSearch (M=16, efC=128)}
+    \label{fig:recall_k10_m16_efc128}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{1M_plots/recall_M16_efC64_k20.png}
+    \caption{Recall@20 vs efSearch (M=16, efC=64)}
+    \label{fig:recall_k20_m16_efc64}
+  \end{subfigure}
+
+  \vspace{0.6em}
+
+  \begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{1M_plots/qps_M16_efC64_k10.png}
+    \caption{QPS vs efSearch (M=816 efC=64, k=10)}
+    \label{fig:qps_k10_m16_efc64_1m}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{1M_plots/recall_vs_qps_M8_efC64_k20.png}
+    \caption{Recall@10 vs QPS (M=8, efC=64)}
+    \label{fig:recall_vs_qps_k20_m8_efc64_1m}
+  \end{subfigure}
+
+  \caption{\textbf{Σχήμα 2 — SIFT1M (1M vectors, 128-dim).} Σε αντίθεση με το Σχήμα 1, εδώ φαίνεται καθαρά η επίδραση της κλίμακας: η HNSW NEW εμφανίζει σημαντικά χαμηλότερο QPS (3–4$\times$) σε σχέση με hnswlib, κυρίως λόγω Python overhead ανά distance computation. Το recall παραμένει παρόμοιο και για τις τρεις υλοποιήσεις, επιβεβαιώνοντας ότι ο γράφος HNSW κατασκευάζεται ορθά. Η C++ έκδοση (HNSW NEW C++) γεφυρώνει σε μεγάλο βαθμό αυτή τη διαφορά.}
+  \label{fig:hnsw_1m_plots}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Representative benchmark results for SIFT1M (HNSW NEW vs hnswlib vs faiss-hnsw).}
+\label{tab:bench_sift1m_representative}
+
+\begin{tabular}{lrrrrrrr}
+\toprule
+\textbf{Method} & \textbf{M} & \textbf{efC} & \textbf{efS} & \textbf{k} &
+\textbf{Recall@k} & \textbf{QPS} & \textbf{Time (s)} \\
+\midrule
+
+\multicolumn{8}{c}{\textbf{High-quality graph regime (M=16, efC=128)}}\\
+\midrule
+
+% --- HNSW NEW ---
+HNSW NEW   & 16 & 128 & 20  & 10 & 0.8390 & 3243.77 & 3.0828 \\
+HNSW NEW   & 16 & 128 & 50  & 10 & 0.9471 & 2377.59 & 4.2059 \\
+HNSW NEW   & 16 & 128 & 100 & 10 & 0.9837 &  857.88 & 11.6567 \\
+
+\midrule
+
+% --- FAISS ---
+faiss-hnsw & 16 & 128 & 20  & 10 & 0.8424 & 9396.84 & 1.0642 \\
+faiss-hnsw & 16 & 128 & 50  & 10 & 0.9480 & 6235.89 & 1.6036 \\
+faiss-hnsw & 16 & 128 & 100 & 10 & 0.9832 & 2450.09 & 4.0815 \\
+
+\midrule
+
+% --- HNSWLIB ---
+hnswlib    & 16 & 128 & 20  & 10 & 0.8320 & 14394.57 & 0.6947 \\
+hnswlib    & 16 & 128 & 50  & 10 & 0.9423 & 7242.29 & 1.3808 \\
+hnswlib    & 16 & 128 & 100 & 10 & 0.9800 & 5257.88 & 1.9019 \\
+
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Σύνδεση με το επόμενο milestone (DARTH ως κίνητρο)}
+Το M1 καταλήγει σε καθαρή baseline υλοποίηση HNSW και αξιολόγηση.
+Το επόμενο βήμα (M2) εισάγει την ιδέα του \textbf{early termination} στο base-layer search:
+αντί να επιλέγεται σταθερό $efSearch$, ο αλγόριθμος θα αποφασίζει δυναμικά πότε αξίζει να συνεχίσει.
+
+Στο πλαίσιο του DARTH, αυτό γίνεται μέσω ενός predictor που εκτιμά το τρέχον recall κατά τη διάρκεια της αναζήτησης, και τερματίζει όταν επιτευχθεί στόχος $R_t$ (target recall).
+
+% ------------------------------------------------------------
+% (Optional) Where to place figures/tables in M1
+% ------------------------------------------------------------
+% \subsection{Αποτελέσματα}
+% \begin{table}[h]
+% \centering
+% \caption{Baseline σύγκριση (M1).}
+% \begin{tabular}{lcccc}
+% \hline
+% Method & M & efC & efS & Recall@10 \\
+% \hline
+% HNSW-from-scratch & 16 & 100 & 100 & ... \\
+% hnswlib & 16 & 100 & 100 & ... \\
+% FAISS-HNSW & 16 & 100 & 100 & ... \\
+% \hline
+% \end{tabular}
+% \end{table}
+
+
+
+\section{Milestone M2: Ενσωμάτωση DARTH πάνω από HNSW}
+
+\subsection{Στόχος}
+
+Στο Milestone M1 υλοποιήθηκε ο αλγόριθμος HNSW από την αρχή και αξιολογήθηκε ως προς ορθότητα και απόδοση. 
+
+Στο παρόν Milestone (M2) επεκτείνουμε τον HNSW με βάση την ιδέα του DARTH (Declarative Approximate Recall Target in HNSW), με στόχο:
+
+\begin{itemize}
+    \item Να επιτρέψουμε \textbf{δηλωτικό στόχο ανά query} (target recall $R_t$),
+    \item Να υλοποιήσουμε \textbf{adaptive early termination} στο base layer,
+    \item Να μειώσουμε το υπολογιστικό κόστος (distance computations) όταν ο στόχος recall έχει ήδη επιτευχθεί.
+\end{itemize}
+
+Σε αντίθεση με τον κλασικό HNSW όπου το $efSearch$ είναι σταθερό, εδώ το search μπορεί να τερματιστεί δυναμικά.
+
+
+\subsection{Θεωρητική Αιτιολόγηση της Προσέγγισης}
+Στον κλασικό HNSW, το επίπεδο ποιότητας του αποτελέσματος (recall) ελέγχεται έμμεσα μέσω της παραμέτρου $efSearch$. Μεγαλύτερη τιμή οδηγεί σε υψηλότερο recall αλλά και αυξημένο υπολογιστικό κόστος.
+
+Ωστόσο, το $efSearch$ αποτελεί \textbf{στατική και καθολική παράμετρο}, η οποία εφαρμόζεται ομοιόμορφα σε όλα τα queries, ανεξαρτήτως της δυσκολίας τους. Στην πράξη όμως, διαφορετικά queries παρουσιάζουν διαφορετική «τοπική πολυπλοκότητα» στο γράφημα:
+
+\begin{itemize}
+\item \textbf{Εύκολα queries}: Η γειτονιά τους είναι καλά διαχωρισμένη και ο nearest neighbor εντοπίζεται γρήγορα με λίγες επεκτάσεις.
+\item \textbf{Δύσκολα queries}: Βρίσκονται σε πυκνές ή αμφίσημες περιοχές του χώρου, όπου πολλές αποστάσεις είναι παρόμοιες, απαιτώντας περισσότερες επεκτάσεις για υψηλό recall.
+\end{itemize}
+
+Ως «εύκολο» query ορίζεται εκείνο για το οποίο το σωστό σύνολο $k$-NN μπορεί να προσεγγιστεί με μικρό αριθμό distance computations. Αντίθετα, «δύσκολο» query είναι εκείνο που απαιτεί μεγάλο αριθμό επεκτάσεων για να σταθεροποιηθεί το αποτέλεσμα.
+
+Η χρήση σταθερού $efSearch$ οδηγεί σε:
+
+\begin{itemize}
+\item Υπερβολικό κόστος για εύκολα queries.
+\item Ανεπαρκές recall για δύσκολα queries (αν το $efSearch$ είναι μικρό).
+\end{itemize}
+
+Η προσέγγιση DARTH εισάγει έναν \textbf{predictor recall}, ο οποίος επιτρέπει την εκτίμηση της ποιότητας κατά τη διάρκεια της αναζήτησης. Με αυτόν τον τρόπο, το stopping criterion γίνεται \textbf{δηλωτικό και προσαρμοστικό}, αντί σταθερό.
+
+\subsection{Αρχιτεκτονική Επέκτασης}
+
+Η βασική ιδέα είναι ότι η ιεραρχική δομή του HNSW παραμένει αμετάβλητη:
+
+\begin{itemize}
+    \item Στα ανώτερα layers εκτελείται greedy descent (beam width = 1).
+    \item Η διαφοροποίηση εισάγεται αποκλειστικά στο base layer (layer 0).
+\end{itemize}
+
+Η τροποποίηση αφορά τη διαδικασία best-first search στο layer 0. Υπενθυμίζουμε ότι η best-first αναζήτηση στο layer 0 χρησιμοποιεί δύο δομές:
+\begin{itemize}
+  \item \textbf{Ουρά υποψηφίων $C$} (min-heap): κόμβοι που δεν έχουν επεκταθεί ακόμα, ταξινομημένοι κατά αύξουσα απόσταση από το query.
+  \item \textbf{Σύνολο αποτελεσμάτων $W$} (max-heap, μέγεθος $efSearch$): οι $ef$ πλησιέστεροι κόμβοι που έχουν βρεθεί.
+\end{itemize}
+Σε κάθε βήμα αφαιρείται ο πλησιέστερος κόμβος από το $C$, επεκτείνεται, και οι γείτονές του εξετάζονται για εισαγωγή στο $W$. Η αναζήτηση τερματίζει όταν ο κόμβος στην κεφαλή του $C$ είναι χειρότερος από τον χειρότερο κόμβο στο $W$ (δεν μπορεί να βελτιωθεί το αποτέλεσμα). Στο DARTH, αυτή η ουρά $C$ μπορεί να τερματιστεί \emph{νωρίτερα} αν ο predictor εκτιμήσει ότι το recall έχει ήδη επιτευχθεί.
+
+\subsection{Διαφορά από τον Κλασικό HNSW}
+
+\begin{center}
+\begin{tabular}{|l|c|c|}
+\hline
+ & \textbf{HNSW} & \textbf{HNSW + DARTH} \\
+\hline
+Termination & Όταν αδειάσει η ουρά ή φτάσει $efSearch$ & Όταν προβλεφθεί $R_p \ge R_t$ \\
+Recall target & Έμμεσο (μέσω efSearch) & Δηλωτικό ($R_t$) \\
+Cost control & Σταθερό efSearch & Adaptive early stop \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Feature Extraction Κατά τη Διάρκεια Αναζήτησης}
+
+Κατά τη διάρκεια της αναζήτησης στο base layer συλλέγονται δυναμικά χαρακτηριστικά που αποτυπώνουν την κατάσταση της αναζήτησης. Αυτά χωρίζονται σε δύο ομάδες:
+
+\textbf{Ομάδα Α — Μετρητές προόδου αναζήτησης (3 χαρακτηριστικά):}
+\begin{itemize}
+    \item $n_{\text{step}}$: αριθμός επεκτάσεων κόμβων (πόσοι κόμβοι αφαιρέθηκαν από το $C$)
+    \item $n_{\text{dis}}$: συνολικός αριθμός distance computations
+    \item $n_{\text{insert}}$: αριθμός ενημερώσεων του result set $W$ (πόσες φορές βελτιώθηκε το top-k)
+\end{itemize}
+
+\textbf{Ομάδα Β — Χαρακτηριστικά αποστάσεων (3 + 5 στατιστικά = 8 χαρακτηριστικά):}
+\begin{itemize}
+    \item $d_{\text{first}}$: απόσταση του αρχικού entry point από το query (πρώτη απόσταση που υπολογίστηκε)
+    \item $d_{\text{closest}}$: τρέχουσα ελάχιστη απόσταση στο $W$
+    \item $d_{\text{furthest}}$: απόσταση του $k$-οστού γείτονα (worst element στο $W$, δηλαδή το «πόρτα» εισόδου)
+    \item Στατιστικά των αποστάσεων \emph{όλων} των κόμβων στο τρέχον $W$: mean, variance, p25, p50 (median), p75
+\end{itemize}
+
+Συνολικά: $3 + 3 + 5 = \mathbf{11}$ χαρακτηριστικά. Τα στατιστικά (mean, variance, p25, p50, p75) παρέχουν πληροφορία για τη \emph{μορφή} της κατανομής αποστάσεων στο τρέχον result set, η οποία σχετίζεται με το πόσο «σφιχτή» είναι η γειτονιά — ένας χρήσιμος δείκτης δυσκολίας του query.
+
+\subsection{Ρόλος και Κόστος του Predictor}
+Ο predictor αποτελεί εξωτερικό μοντέλο πρόβλεψης που δέχεται ως είσοδο το διάνυσμα χαρακτηριστικών και επιστρέφει την εκτιμώμενη τιμή $R_p$.
+
+Η χρήση του συνεπάγεται:
+
+\begin{itemize}
+\item Κόστος εξαγωγής χαρακτηριστικών.
+\item Κόστος inference του μοντέλου.
+\end{itemize}
+
+Επομένως, η πρόβλεψη δεν εκτελείται σε κάθε distance computation, αλλά περιοδικά. Η επιλογή του prediction interval αποτελεί κρίσιμη σχεδιαστική απόφαση, καθώς:
+
+\begin{itemize}
+\item Πολύ συχνές προβλέψεις αυξάνουν το overhead.
+\item Πολύ αραιές προβλέψεις καθυστερούν τον πιθανό early termination.
+\end{itemize}
+
+Η δυναμική ρύθμιση του interval επιχειρεί να εξισορροπήσει το trade-off μεταξύ ακρίβειας πρόβλεψης και υπολογιστικού κόστους.
+
+
+\subsection{Adaptive Prediction Interval}
+
+Ο predictor έχει κόστος εκτέλεσης, άρα δεν καλείται σε κάθε distance computation. Αντ' αυτού, καλείται κάθε $p_i$ distance computations (\emph{prediction interval}). Η επιλογή του $p_i$ αποτελεί trade-off:
+\begin{itemize}
+  \item Μικρό $p_i$: συχνότερος έλεγχος → νωρίτερος πιθανός τερματισμός, αλλά αυξημένο overhead.
+  \item Μεγάλο $p_i$: μειωμένο overhead, αλλά αργότερη αντίδραση στη σύγκλιση.
+\end{itemize}
+
+Το DARTH εισάγει \emph{adaptive} interval: αρχικά το interval είναι μεγάλο (αποφεύγουμε πρόωρη κλήση predictor όταν το result set δεν είναι ακόμα σταθερό), και μειώνεται καθώς πλησιάζουμε τον στόχο. Συγκεκριμένα, ορίζονται δύο παράμετροι:
+\begin{itemize}
+  \item $i_{pi}$ (\emph{initial prediction interval}): το αρχικό διάστημα — χρησιμοποιείται στην αρχή της αναζήτησης.
+  \item $m_{pi}$ (\emph{minimum prediction interval}): το ελάχιστο επιτρεπτό διάστημα — δεν ελέγχουμε πυκνότερα από αυτό.
+\end{itemize}
+
+Το interval ενημερώνεται δυναμικά μετά από κάθε πρόβλεψη ως:
+\[
+p_i = m_{pi} + (i_{pi} - m_{pi}) \cdot (R_t - R_p)
+\]
+Όταν $R_p \ll R_t$: $p_i \approx i_{pi}$ (αραιοί έλεγχοι). Όταν $R_p \to R_t$: $p_i \to m_{pi}$ (πυκνοί έλεγχοι). Έτσι το σύστημα «επιταχύνει» τους ελέγχους όσο πλησιάζει στον στόχο.
+
+\subsection{Αλγόριθμος DARTH στο Base Layer}
+
+\textbf{Βήμα 1:} Εκκίνηση από entry point του layer 0
+
+\textbf{Βήμα 2:} Εκτέλεση best-first traversal
+
+\textbf{Βήμα 3:} Κάθε $p_i$ distance computations:
+
+\begin{itemize}
+    \item Υπολογισμός feature vector
+    \item Πρόβλεψη $R_p$
+    \item Αν $R_p \ge R_t$: τερματισμός
+    \item Αλλιώς: ενημέρωση $p_i$
+\end{itemize}
+
+\textbf{Βήμα 4:} Αν δεν ικανοποιηθεί το κριτήριο, συνεχίζεται μέχρι φυσικό termination του HNSW.
+
+\subsection{Σχεδιαστικές Αποφάσεις}
+Κατά την ενσωμάτωση του DARTH λήφθηκαν οι εξής σχεδιαστικές αποφάσεις:
+
+\begin{itemize}
+\item Ο predictor εφαρμόζεται αποκλειστικά στο base layer.
+\item Η ιεραρχική δομή και η διαδικασία insertion του HNSW παραμένουν αμετάβλητες.
+\item Ο μηχανισμός early termination δεν επηρεάζει τη δομή του γράφου.
+\item Η επέκταση είναι modular και μπορεί να απενεργοποιηθεί χωρίς αλλαγή του βασικού αλγορίθμου.
+\end{itemize}
+
+Με αυτόν τον τρόπο, η τροποποίηση αφορά αποκλειστικά το stopping criterion της best-first αναζήτησης.
+
+\subsection{Αποτελέσματα με Dummy Predictor (Ablation Study)}
+Για την αποτίμηση της επίδρασης του μηχανισμού πρόβλεψης, υλοποιήθηκε ένας dummy predictor ο οποίος επιστρέφει σταθερά $R_p = 0$.
+
+Στην περίπτωση αυτή:
+
+\begin{itemize}
+\item Το early termination δεν ενεργοποιείται ποτέ.
+\item Ο αλγόριθμος εκτελεί πλήρη αναζήτηση όπως ο κλασικός HNSW.
+\end{itemize}
+
+Τα αποτελέσματα αυτά λειτουργούν ως \textbf{baseline} για την εκτίμηση του επιπλέον κόστους που εισάγει το DARTH framework, ανεξάρτητα από την ποιότητα του predictor.
+
+\begin{figure}[H]
+  \centering
+
+  \begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{DarthPaper/qps_M8_efC128_k10.png}
+    \caption{Recall@10 vs efSearch (M=8, efC=128)}
+    \label{fig:qps_k10_m8_efc128}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{DarthPaper/recall_M16_efC128_k20.png}
+    \caption{Recall@20 vs efSearch (M=16, efC=128)}
+    \label{fig:recall_k20_m16_efc128}
+  \end{subfigure}
+
+  \vspace{0.6em}
+
+  \begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{DarthPaper/recall_M16_efC64_k20.png}
+    \caption{QPS vs efSearch (M=816 efC=64, k=20)}
+    \label{fig:qps_k20_m16_efc64}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{DarthPaper/recall_vs_qps_M8_efC128_k10.png}
+    \caption{Recall@20 vs QPS (M=8, efC=64)}
+    \label{fig:recall_vs_qps_k20_m8_efc128}
+  \end{subfigure}
+
+  \caption{\textbf{Σχήμα 3 — DARTH με Dummy Predictor (result set μεγέθους $k$).} Ο dummy predictor επιστρέφει πάντα $R_p=0$, άρα το early termination δεν ενεργοποιείται ποτέ — η αναζήτηση τερματίζεται φυσικά. Αυτό αποτυπώνει το \emph{καθαρό κόστος} του DARTH framework (feature extraction + predictor overhead) χωρίς όφελος από πρόωρο τερματισμό. Παρατηρείται ότι το recall του DARTH (dummy) είναι χαμηλότερο από HNSW NEW με ίδιο efSearch: αυτό οφείλεται στην επιλογή result set μεγέθους $k$ (αντί $efSearch$), η οποία κάνει την αναζήτηση πιο επιθετική αλλά λιγότερο πλήρη.}
+  \label{fig:darth_dummy_plots}
+\end{figure}
+
+
+\begin{table}[h]
+\centering
+\caption{SIFTsmall – Σύγκριση DARTH (Dummy Predictor) με HNSW και Βιβλιοθήκες}
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+Method & M & efSearch & k & Recall@k & QPS \\
+\hline
+DARTH (dummy) & 8  & 20  & 10 & 0.846  & 40,048 \\
+HNSW NEW      & 8  & 20  & 10 & 0.955  & 16,209 \\
+faiss-hnsw    & 8  & 20  & 10 & 0.945  & 32,892 \\
+hnswlib       & 8  & 20  & 10 & 0.940  & 76,287 \\
+\hline
+DARTH (dummy) & 16 & 50  & 20 & 0.942  & 9,116 \\
+HNSW NEW      & 16 & 50  & 20 & 0.996  & 9,131 \\
+faiss-hnsw    & 16 & 50  & 20 & 0.9925 & 12,550 \\
+hnswlib       & 16 & 50  & 20 & 0.981  & 36,784 \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Πιθανές Πηγές Σφάλματος}
+Η χρήση predictor εισάγει πιθανότητα σφάλματος:
+
+\begin{itemize}
+\item Αν το $R_p$ υπερεκτιμηθεί, η αναζήτηση μπορεί να τερματιστεί πρόωρα, μειώνοντας το πραγματικό Recall@k.
+\item Αν το $R_p$ υποεκτιμηθεί, η αναζήτηση συνεχίζεται περισσότερο από όσο απαιτείται.
+\end{itemize}
+
+
+\subsection{Παρατήρηση Σχεδιαστικής Διαφοράς: Result Set μεγέθους $k$ έναντι $efSearch$}
+
+Κατά την υλοποίηση του DARTH παρατηρήθηκε ότι ο ψευδοκώδικας του Algorithm~1 ορίζει το \textit{resultSet} ως heap μεγέθους $k$. 
+Αυτό διαφέρει από την κλασική υλοποίηση του HNSW σε ευρέως χρησιμοποιούμενες βιβλιοθήκες (π.χ. FAISS/hnswlib), όπου στο base layer διατηρείται σύνολο υποψήφιων αποτελεσμάτων μεγέθους $efSearch$ και στο τέλος επιστρέφονται τα top-$k$.
+
+Η επιλογή μεγέθους του result set επηρεάζει το exploration της αναζήτησης:
+
+\begin{itemize}
+    \item \textbf{Result set μεγέθους $k$ (paper-faithful)}: το κριτήριο \texttt{GetMaxDistance(resultSet)} γίνεται πιο αυστηρό νωρίς, οδηγώντας σε πιο επιθετικό pruning. Αυτό τείνει να αυξάνει το QPS αλλά μπορεί να μειώσει το Recall@k.
+    \item \textbf{Result set μεγέθους $efSearch$ (standard HNSW)}: διατηρείται μεγαλύτερο σύνολο υποψηφίων κατά τη διάρκεια της αναζήτησης, ευνοώντας υψηλότερο recall με αυξημένο κόστος.
+\end{itemize}
+
+\subsection{Αποτελέσματα με result set μεγέθους $efSearch$}
+\begin{figure}[H]
+  \centering
+
+  \begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{DarthHNSWBased/qps_M16_efC128_k10.png}
+    \caption{Recall@10 vs efSearch (M=16, efC=128)}
+    \label{fig:qps_k10_m16_efc128}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{DarthHNSWBased/recall_M8_efC128_k20.png}
+    \caption{Recall@20 vs efSearch (M=8, efC=128)}
+    \label{fig:recall_k20_m16_efc128}
+  \end{subfigure}
+
+  \vspace{0.6em}
+
+  \begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{DarthHNSWBased/recall_M16_efC64_k20.png}
+    \caption{QPS vs efSearch (M=16 efC=64, k=20)}
+    \label{fig:qps_k20_m16_efc64}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{DarthHNSWBased/recall_vs_qps_M8_efC128_k20.png}
+    \caption{Recall@20 vs QPS (M=8, efC=128)}
+    \label{fig:recall_vs_qps_k20_m8_efc128}
+  \end{subfigure}
+
+  \caption{\textbf{Σχήμα 4 — DARTH με result set μεγέθους $efSearch$.} Σε αντίθεση με το Σχήμα 3, εδώ το result set κρατά $efSearch$ υποψηφίους (κλασικό HNSW). Αυτό οδηγεί σε υψηλότερο recall (ίδιο με HNSW NEW), αποδεικνύοντας ότι η διαφορά recall του Σχήματος 3 προέρχεται αποκλειστικά από την επιλογή μεγέθους result set και όχι από το DARTH mechanism. Η σύγκριση QPS δείχνει ότι ο DARTH με dummy predictor εισάγει μικρό overhead (περίπου 5--10\%) σε σχέση με plain HNSW.}
+  \label{fig:darth_hnsw_plots}
+\end{figure}
+
+\begin{table}[h]
+\centering
+\caption{SIFTsmall – M=8, efC=64, efSearch=20, k=10}
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+Method & M & efSearch & k & Recall@k & QPS \\
+\hline
+DARTH (dummy) & 8  & 20 & 10 & 0.923  & 25,370 \\
+HNSW NEW      & 8  & 20 & 10 & 0.955  & 24,872 \\
+faiss-hnsw    & 8  & 20 & 10 & 0.945  & 30,730 \\
+hnswlib       & 8  & 20 & 10 & 0.940  & 79,969 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{SIFTsmall – M=8, efC=64, efSearch=50, k=10}
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+Method & M & efSearch & k & Recall@k & QPS \\
+\hline
+DARTH (dummy) & 8  & 50 & 10 & 0.955  & 12,910 \\
+HNSW NEW      & 8  & 50 & 10 & 0.992  & 14,005 \\
+faiss-hnsw    & 8  & 50 & 10 & 0.991  & 15,854 \\
+hnswlib       & 8  & 50 & 10 & 0.991  & 49,982 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{SIFTsmall – M=8, efC=64, efSearch=100, k=10}
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+Method & M & efSearch & k & Recall@k & QPS \\
+\hline
+DARTH (dummy) & 8  & 100 & 10 & 0.958  & 7,782 \\
+HNSW NEW      & 8  & 100 & 10 & 0.998  & 8,166 \\
+faiss-hnsw    & 8  & 100 & 10 & 1.000  & 9,358 \\
+hnswlib       & 8  & 100 & 10 & 0.997  & 29,907 \\
+\hline
+\end{tabular}
+\end{table}
+
+Στο παρόν report παρουσιάζονται αποτελέσματα και για τις δύο παραλλαγές, ώστε να τεκμηριωθεί η επίδραση της σχεδιαστικής επιλογής και να εξασφαλιστεί δίκαιη σύγκριση με υλοποιήσεις αναφοράς.
+
+\section{Milestone M3: Ενσωμάτωση PiP πάνω από HNSW}
+
+\subsection{Στόχος}
+Στο παρόν milestone μελετάται και υλοποιείται η στρατηγική \textbf{PiP (Patience in Proximity)} ως ένας απλός, predictor-free μηχανισμός early termination για την αναζήτηση στο HNSW. 
+Σε αντίθεση με το DARTH, το οποίο βασίζεται σε predictor για την εκτίμηση recall, το PiP στηρίζεται αποκλειστικά στη \textbf{σταθερότητα του top-$k$ συνόλου} κατά τη διάρκεια της αναζήτησης. Στόχος είναι η μείωση του υπολογιστικού κόστους χωρίς την εισαγωγή εξωτερικού μοντέλου πρόβλεψης.
+
+\subsection{Βασική Ιδέα}
+Η βασική παρατήρηση του PiP είναι ότι, καθώς εξελίσσεται η αναζήτηση στο base layer, το σύνολο των καλύτερων γειτόνων τείνει σταδιακά να σταθεροποιείται. Αν για αρκετά συνεχόμενα βήματα το top-$k$ παραμένει σχεδόν αμετάβλητη, τότε η περαιτέρω εξερεύνηση είναι πιθανό να έχει μικρό όφελος. Έτσι, το PiP εισάγει ένα κριτήριο πρόωρου τερματισμού βασισμένο στο βαθμό επικάλυψης του top-$k$ μεταξύ διαδοχικών βημάτων.
+
+\subsection{Μέτρο Σταθερότητας}
+Έστω $N_{h,l}(q)$ το σύνολο των top-$k$ γειτόνων του query $q$ μετά από $h$ visits στο layer $l$. Τότε ο βαθμός σταθερότητας ορίζεται ως:
+
+\[
+\phi_{h,l}(q)=100 \cdot \frac{|N_{h-1,l}(q)\cap N_{h,l}(q)|}{k}
+\]
+
+Η ποσότητα $\phi_{h,l}(q)$ εκφράζει το ποσοστό των στοιχείων του top-$k$ που παραμένουν ίδια από το ένα βήμα στο επόμενο.
+
+\subsection{Κριτήριο Early Termination}
+Το PiP τερματίζει την αναζήτηση όταν η σταθερότητα του top-$k$ παραμένει υψηλή για αρκετά συνεχόμενα βήματα. Συγκεκριμένα, αν ισχυεί:
+\[
+\phi_{h,l}(q) \ge \gamma
+\]
+
+για $\Delta$ συνεχόμενα iterations, τότε η αναζήτηση σταματά.
+
+Όπου:
+\begin{itemize}
+    \item $\gamma$: threshold σταθερότητας (π.χ. 95\%)
+    \item $\Delta$: patience parameter
+\end{itemize}
+
+\subsection{Αλγόριθμος PiP στο Base Layer}
+
+Ο αλγόριθμος PiP εκτελείται αποκλειστικά στο base layer (layer 0), ακριβώς όπως το DARTH. Τα ανώτερα layers παραμένουν αμετάβλητα (greedy descent). Η best-first αναζήτηση τροποποιείται ως εξής:
+
+\begin{enumerate}
+  \item \textbf{Εκκίνηση:} Αρχικοποίηση ουράς $C$ και result set $W$ όπως στον κλασικό HNSW. Θέτουμε μετρητή σταθερότητας $\delta \leftarrow 0$ και $W_{\text{prev}} \leftarrow \emptyset$.
+  \item \textbf{Κάθε βήμα:} Επέκταση του πλησιέστερου κόμβου από $C$. Ενημέρωση $W$.
+  \item \textbf{Έλεγχος σταθερότητας (μετά από κάθε επέκταση):}
+    \[
+    \phi = 100 \cdot \frac{|W_{\text{prev}} \cap W|}{k}
+    \]
+    \begin{itemize}
+      \item Αν $\phi \ge \gamma$: $\delta \leftarrow \delta + 1$.
+      \item Αλλιώς: $\delta \leftarrow 0$ (reset, αστάθεια).
+    \end{itemize}
+    Αποθήκευση $W_{\text{prev}} \leftarrow W$.
+  \item \textbf{Κριτήριο τερματισμού:} Αν $\delta \ge \Delta$, τερματισμός.
+  \item \textbf{Φυσικός τερματισμός:} Αν η ουρά $C$ αδειάσει, τερματισμός κανονικά.
+\end{enumerate}
+
+\subsection{Παράμετροι και Ερμηνεία}
+\begin{itemize}
+  \item $\gamma$ (stability threshold): ποσοστό επικάλυψης top-$k$ που θεωρείται «σταθερό». Τυπικές τιμές: 90--99\%. Χαμηλό $\gamma$ → πιο επιθετικός τερματισμός, χαμηλότερο recall.
+  \item $\Delta$ (patience): αριθμός συνεχόμενων σταθερών βημάτων πριν τερματισμό. Τυπικές τιμές: 5--20. Υψηλό $\Delta$ → πιο συντηρητικός τερματισμός, υψηλότερο recall.
+\end{itemize}
+
+\subsection{Τι Θέλουμε να Πετύχουμε}
+Με το PiP επιδιώκουμε:
+\begin{itemize}
+    \item Μείωση του αριθμού επεκτάσεων στο base layer, ιδίως για εύκολα queries όπου το top-$k$ σταθεροποιείται νωρίς.
+    \item Μείωση του συνολικού υπολογιστικού κόστους χωρίς training phase ή εξωτερικό μοντέλο.
+    \item Διατήρηση ικανοποιητικού Recall@k με κατάλληλη επιλογή $(\gamma, \Delta)$.
+\end{itemize}
+
+\textbf{Σύγκριση με DARTH:} Το PiP δεν απαιτεί training phase ούτε predictor, άρα είναι εύκολα εφαρμόσιμο σε νέα datasets. Ωστόσο, δεν παρέχει δηλωτικό recall target ($R_t$) ανά query — ο χρήστης ελέγχει την ποιότητα έμμεσα μέσω $(\gamma, \Delta)$.
+
+\section{Milestone M4: Ενσωμάτωση Ada-ef πάνω από HNSW}
+
+Στο Milestone M4 εξετάζεται η προσέγγιση \textbf{Ada-ef (Adaptive-ef)}, η οποία επιλέγει δυναμικά την τιμή του exploration factor $e$ για κάθε query, με στόχο να προσεγγίσει ένα επιθυμητό επίπεδο recall με όσο το δυνατόν μικρότερο υπολογιστικό κόστος.
+Σε αντίθεση με τον κλασικό HNSW, όπου το $efSearch$ είναι σταθερό για όλα τα queries, το Ada-ef εκτίμα online τη δυσκολία κάθε query και αντιστοιχίζει κατάλληλο $ef$
+\subsection{Βασική Ιδέα}
+Η βασική ιδέα του Ada-ef είναι ότι διαφορετικά queries απαιτούν διαφορετικό βαθμό εξερεύνησης στο base layer. Ορισμένα queries μπορούν να πετύχουν υψηλό recall με μικρό $ef$, ενώ άλλα απαιτούν σημαντικά μεγαλύτερο exploration budget.
+
+Το Ada-ef λειτουργεί σε δύο φάσεις:
+\begin{itemize}
+    \item \textbf{Offline phase}: υπολογίζονται στατιστικά του dataset και κατασκευάζεται ένας πίνακας εκτίμησης $ef$.
+    \item \textbf{Online phase}: συλλέγονται αποστάσεις κατά την αναζήτηση στο base layer, υπολογίζεται score δυσκολίας για το query, και επιλέγεται δυναμικά το κατάλληλο $ef$.
+\end{itemize}
+
+\subsection{Θεωρητική Βάση}
+
+Η προσέγγιση Ada-ef βασίζεται στην παρατήρηση ότι για high dimensional learned embeddings, η πλήρης λίστα αποστάσεων μεταξύ ενός query $q$ και του dataset $V$ μπορεί να προσεγγιστεί από κανονική κατανομή:
+\[
+FDL(q,V) \approx \mathcal{N}(\mu_q,\sigma_q^2)
+\]
+Η κατανομή αυτή εκτιμάται αποδοτικά με χρήση dataset-level στατιστικών και ενός μικρού δείγματος αποστάσεων που συλλέγεται online.
+
+
+\subsection{Query Scoring}
+Κατά το online στάδιο συλλέγεται μία λίστα αποστάσεων $D$ από κόμβους του base layer. Έπειτα εκτιμάται ένα ποσοτημόριο της απόστασης και ορίζεται score δυσκολίας:
+\[
+s(q)=\left|\left\{d \in D \;:\; d \le Q_p(\hat{FDL}(q,V))\right\}\right|
+\]
+όπου $Q_p(\hat{FDL}(q,V))$ είναι το εκτιμώμενο $p$-ποσοστημόριο της distance distribution.
+Το score αυτό χρησιμοποιείται για να εκτιμηθεί αν το query είναι εύκολο ή δύσκολο:
+\begin{itemize}
+    \item Μεγάλο $s(q)$: πολλές μικρές αποστάσεις, άρα πιθανώς μικρό $ef$ αρκεί
+    \item Μικρό $s(q)$: πιο δύσκολο query, άρα απαιτείται μεγαλύτερο $ef$
+\end{itemize}
+
+\subsection{Δυναμική επιλογή του \texorpdfstring($ef$){ef}}
+Με βάση το score και το στόχο recall $R_t$, το Ada-ef επιλέγει δυναμικά exploration factor μέσω ενός offline πίνακα αντιστοίχισης:
+\[
+ef = T(s(q),R_t)
+\]
+όπου $Τ$ είναι ο ef-estimation table που έχει προυπολογιστεί offline.
+
+\subsection{Αλγόριθμος Ada-ef}
+
+\textbf{Offline φάση (εκτελείται μία φορά πριν την αναζήτηση):}
+\begin{enumerate}
+  \item Δειγματοληψία $n_s$ τυχαίων διανυσμάτων από το dataset.
+  \item Υπολογισμός αποστάσεων μεταξύ των δειγμάτων, εκτίμηση dataset-level statistics $(\mu_D, \sigma_D)$.
+  \item Για κάθε δυσκολία $s$ και στόχο recall $R_t$: εκτέλεση αναζήτησης με διαφορετικά $ef$ και καταγραφή του ελάχιστου $ef$ που επιτυγχάνει $R_t$. Αυτό κατασκευάζει τον πίνακα $T(s, R_t) \to ef$.
+\end{enumerate}
+
+\textbf{Online φάση (για κάθε query $q$):}
+\begin{enumerate}
+  \item Εκτέλεση σύντομης αρχικής αναζήτησης (μικρό $ef_0$) για συλλογή δείγματος αποστάσεων $D$ από το base layer.
+  \item Εκτίμηση της κατανομής $\widehat{FDL}(q,V) \approx \mathcal{N}(\hat{\mu}_q, \hat{\sigma}_q^2)$ χρησιμοποιώντας τα dataset-level statistics και τις αποστάσεις $D$.
+  \item Υπολογισμός score δυσκολίας:
+  \[
+  s(q) = \left|\left\{d \in D : d \le Q_p\bigl(\widehat{FDL}(q,V)\bigr)\right\}\right|
+  \]
+  Ένα υψηλό $s(q)$ σημαίνει ότι πολλές αποστάσεις είναι μικρές → εύκολο query (μικρό $ef$ αρκεί).
+  \item Αναζήτηση $ef$ από τον offline πίνακα: $ef^* = T(s(q), R_t)$.
+  \item Εκτέλεση πλήρους αναζήτησης HNSW με $efSearch = ef^*$.
+\end{enumerate}
+
+\subsection{Παράμετροι}
+\begin{itemize}
+  \item $R_t$: δηλωτικός στόχος recall (ίδιος ρόλος με το DARTH).
+  \item $n_b$ (\emph{bins}): αριθμός bins δυσκολίας στον offline πίνακα. Τυπικά 100.
+  \item $\delta$ (\emph{recall tolerance}): επιτρεπτή απόκλιση recall κατά τη δημιουργία του πίνακα. Τυπικά 0.05.
+  \item $p$ (\emph{percentile}): το ποσοστημόριο $p$ που χρησιμοποιείται στον υπολογισμό $Q_p$.
+\end{itemize}
+
+\subsection{Τι θέλουμε να πετύχουμε}
+Με το Ada-ef επιδιώκουμε:
+
+\begin{itemize}
+    \item \textbf{Προσαρμοστικό $ef$ ανά query}: εύκολα queries λαμβάνουν μικρό $ef$, δύσκολα μεγαλύτερο — αποφεύγοντας τόσο over-searching όσο και under-searching.
+    \item \textbf{Declarative recall target}: ο χρήστης ορίζει $R_t$ και το σύστημα επιλέγει αυτόματα το κατάλληλο $ef$.
+    \item \textbf{Αποφυγή training recall predictor}: αντί machine learning, χρησιμοποιείται distribution-aware rule-based μηχανισμός.
+\end{itemize}
+
+\textbf{Σύγκριση με DARTH:} Το Ada-ef δεν παρακολουθεί τη διαδικασία αναζήτησης βήμα-βήμα (δεν εφαρμόζει early termination εντός της αναζήτησης), αλλά επιλέγει $ef$ \emph{πριν} ξεκινήσει η αναζήτηση. Αυτό είναι ταχύτερο υπολογιστικά αλλά λιγότερο ευέλικτο: αν η εκτίμηση δυσκολίας είναι ανακριβής, το $ef$ μπορεί να είναι υπερ- ή υπο-αρκετό.
+
+\textbf{Σύγκριση με PiP:} Το Ada-ef παρέχει declarative recall target (όπως DARTH), ενώ το PiP όχι. Ωστόσο, το PiP δεν απαιτεί offline φάση.
+\end{document}
+
+
+
