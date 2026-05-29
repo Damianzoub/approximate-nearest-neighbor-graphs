@@ -535,7 +535,8 @@ std::vector<int> HNSW_DARTH::search_layer_darth(
     float Rt,
     const IPredictor* predictor,
     int ipi,
-    int mpi
+    int mpi,
+    const DarthLogCallback* log_cb
 ) const {
     using Pair = std::pair<float,int>; // (dist, slot)
 
@@ -569,8 +570,8 @@ std::vector<int> HNSW_DARTH::search_layer_darth(
 
     cand.clear(); res.clear(); tmp.clear();
     cand.reserve((size_t)efSearch * 2 + 16);
-    res.reserve((size_t)k + 16);
-    tmp.reserve((size_t)k + 16);
+    res.reserve((size_t)efSearch + 16);
+    tmp.reserve((size_t)efSearch + 16);
 
     auto min_cmp = [](const Pair& a, const Pair& b) { return a.first > b.first; }; // smallest on top
     auto max_cmp = [](const Pair& a, const Pair& b) { return a.first < b.first; }; // largest on top
@@ -603,12 +604,12 @@ std::vector<int> HNSW_DARTH::search_layer_darth(
     float pi = (float)ipi;
 
     auto get_maxdist_result = [&]() -> float {
-        if ((int)res.size() < k) return std::numeric_limits<float>::infinity();
+        if ((int)res.size() < efSearch) return std::numeric_limits<float>::infinity();
         return res.front().first; // max-heap: worst is at front
     };
 
     auto try_add_result = [&](int slot, float d) -> bool {
-        if ((int)res.size() < k) {
+        if ((int)res.size() < efSearch) {
             heap_push(res, Pair(d, slot), max_cmp);
             ninserts++;
             return true;
@@ -664,11 +665,24 @@ std::vector<int> HNSW_DARTH::search_layer_darth(
         // DARTH early termination
         int pi_int = std::max(1, (int)std::lround((double)pi));
         if ((idis % pi_int) == 0) {
-            // copy current top-k heap into tmp for feature extraction
-            tmp = res; // heap order is fine; extractor sorts distances internally
-            auto feats = darth_extract_features(tmp, ndis, nstep, firstNN, ninserts);
-            float Rp = (float)pred->predict(feats);
+            // Sort efSearch result set and take top-k for feature extraction.
+            // Features should reflect quality of the top-k, which is what recall measures.
+            tmp = res;
+            std::sort(tmp.begin(), tmp.end(),
+                      [](const Pair& a, const Pair& b){ return a.first < b.first; });
+            int nk = std::min((int)tmp.size(), k);
+            std::vector<Pair> topk(tmp.begin(), tmp.begin() + nk);
 
+            auto feats = darth_extract_features(topk, ndis, nstep, firstNN, ninserts);
+
+            if (log_cb) {
+                std::vector<int> topk_ids;
+                topk_ids.reserve(nk);
+                for (int i = 0; i < nk; ++i) topk_ids.push_back(tmp[i].second);
+                (*log_cb)(feats, topk_ids);
+            }
+
+            float Rp = (float)pred->predict(feats);
             if (Rp >= Rt) break;
 
             // pi = mpi + (ipi - mpi) * (Rt - Rp)
@@ -692,6 +706,52 @@ std::vector<int> HNSW_DARTH::search_layer_darth(
     out.reserve(m);
     for (int i = 0; i < m; ++i) out.push_back(tmp[i].second);
     return out;
+}
+
+
+// ====================== DARTH: search_darth_collect ======================
+void HNSW_DARTH::search_darth_collect(
+    const std::vector<std::vector<float>>& Xq,
+    int k,
+    int efSearch,
+    int ipi,
+    const DarthLogCallback& log_cb,
+    std::vector<std::vector<float>>& D,
+    std::vector<std::vector<int>>& I) const {
+
+    D.assign(Xq.size(), std::vector<float>(k, std::numeric_limits<float>::infinity()));
+    I.assign(Xq.size(), std::vector<int>(k, -1));
+
+    // Never-exit predictor — we only want the log callback, not early termination.
+    struct NoStop final : IPredictor {
+        float predict(const DarthFeatures&) const override { return 0.0f; }
+    } nostop;
+
+    for (size_t i = 0; i < Xq.size(); ++i) {
+        const auto& q = Xq[i];
+        check_dim(q);
+
+        const float* qptr = q.data();
+        float q_inv_norm = 1.0f;
+        if (metric_ == Metric::Cosine) q_inv_norm = inv_norm_ptr(qptr, dim_);
+
+        int ep = entry_id_;
+        for (int lc = maxlevel_; lc > 0; --lc)
+            ep = search_layer_greedy(q, ep, lc);
+
+        auto slots = search_layer_darth(q, ep, 0, efSearch, k,
+                                        -std::numeric_limits<float>::infinity(),
+                                        &nostop, ipi, 0, &log_cb);
+
+        int m = std::min((int)slots.size(), k);
+        for (int j = 0; j < m; ++j) {
+            int id = slot_to_id_[slots[j]];
+            I[i][j] = id;
+            auto it = id_to_slot_.find(id);
+            if (it != id_to_slot_.end())
+                D[i][j] = dist_ptr(qptr, it->second, q_inv_norm);
+        }
+    }
 }
 
 

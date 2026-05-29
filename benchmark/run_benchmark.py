@@ -68,7 +68,7 @@ def _recall(I_pred: np.ndarray, gt: np.ndarray, k: int) -> float:
     return float(hits) / (len(gt_k) * k)
 
 def _measure(search_fn, xq: np.ndarray, gt: np.ndarray, k: int):
-    """Return (recall, qps). search_fn(xq) -> I (n, k)."""
+    """Return (recall, qps, query_time_s). search_fn(xq) -> I (n, k)."""
     nq = len(xq)
     wq = xq[:min(nq, 64)]
     for _ in range(N_WARMUP):
@@ -79,7 +79,7 @@ def _measure(search_fn, xq: np.ndarray, gt: np.ndarray, k: int):
         I  = search_fn(xq)
         times.append(time.perf_counter() - t0)
     t = min(times)
-    return _recall(I, gt, k), nq / t
+    return _recall(I, gt, k), nq / t, round(t, 4)
 
 def _l2norm(x: np.ndarray) -> np.ndarray:
     norms = np.linalg.norm(x, axis=1, keepdims=True).clip(min=1e-10)
@@ -108,17 +108,31 @@ DATASETS = {
         "metric": "l2",
         "pip_gamma": 99.0, "pip_delta": 20,
     },
-    "sift128": {
-        "base":   ROOT / "Datasets/sift128ann/sift128_base.fvecs",
-        "query":  ROOT / "Datasets/sift128ann/sift128_query.fvecs",
-        "gt":     ROOT / "Datasets/sift128ann/sift128_groundtruth.ivecs",
+    # "sift128": {   # cut-down version (200K of 1M) — excluded
+    #     "base":   ROOT / "Datasets/sift128ann/sift128_base.fvecs",
+    #     "query":  ROOT / "Datasets/sift128ann/sift128_query.fvecs",
+    #     "gt":     ROOT / "Datasets/sift128ann/sift128_groundtruth.ivecs",
+    #     "metric": "l2",
+    #     "pip_gamma": 99.0, "pip_delta": 20,
+    # },
+    # "glove100": {  # cut-down version (200K of 1.18M) — excluded
+    #     "base":   ROOT / "Datasets/glove100ann/glove100_base.fvecs",
+    #     "query":  ROOT / "Datasets/glove100ann/glove100_query.fvecs",
+    #     "gt":     ROOT / "Datasets/glove100ann/glove100_groundtruth.ivecs",
+    #     "metric": "l2",
+    #     "pip_gamma": 99.0, "pip_delta": 20,
+    # },
+    "glove100_full": {
+        "base":   ROOT / "Datasets/glove100_full/glove100_base.fvecs",
+        "query":  ROOT / "Datasets/glove100_full/glove100_query.fvecs",
+        "gt":     ROOT / "Datasets/glove100_full/glove100_groundtruth.ivecs",
         "metric": "l2",
         "pip_gamma": 99.0, "pip_delta": 20,
     },
-    "glove100": {
-        "base":   ROOT / "Datasets/glove100ann/glove100_base.fvecs",
-        "query":  ROOT / "Datasets/glove100ann/glove100_query.fvecs",
-        "gt":     ROOT / "Datasets/glove100ann/glove100_groundtruth.ivecs",
+    "sift1m": {
+        "base":   ROOT / "Datasets/sift/sift_base.fvecs",
+        "query":  ROOT / "Datasets/sift/sift_query.fvecs",
+        "gt":     ROOT / "Datasets/sift/sift_groundtruth.ivecs",
         "metric": "l2",
         "pip_gamma": 99.0, "pip_delta": 20,
     },
@@ -179,15 +193,17 @@ def _sweep_baseline_and_darth(xb, xq, gt, dataset, M, efC, metric, predictor):
     print(f"  [C++] Building Baseline/DARTH M={M} efC={efC} …", flush=True)
     t0 = time.perf_counter()
     idx = _build_darth_cpp(xb, M, efC, metric)
-    print(f"  [C++] Built in {time.perf_counter()-t0:.1f}s", flush=True)
+    build_t = round(time.perf_counter() - t0, 2)
+    print(f"  [C++] Built in {build_t:.1f}s", flush=True)
 
     for ef in EF_SEARCH:
         for k in K_VALUES:
             # Baseline
             fn = lambda q, _ef=ef, _k=k: idx.search(
                 np.ascontiguousarray(q, dtype=np.float32), k=int(_k), efSearch=int(_ef))[1]
-            rec, qps = _measure(fn, xq, gt, k)
-            rows.append(_row(dataset, "Baseline-HNSW", M, efC, ef, k, rec, qps))
+            rec, qps, qt = _measure(fn, xq, gt, k)
+            rows.append(_row(dataset, "Baseline-HNSW", M, efC, ef, k, rec, qps,
+                             build_time_s=build_t, query_time_s=qt))
             print(f"    Baseline  ef={ef:4d} k={k} → R@{k}={rec:.4f}  QPS={qps:.0f}", flush=True)
 
             # DARTH
@@ -196,8 +212,9 @@ def _sweep_baseline_and_darth(xb, xq, gt, dataset, M, efC, metric, predictor):
                     np.ascontiguousarray(q, dtype=np.float32),
                     k=int(_k), efSearch=int(_ef), Rt=DARTH_RT,
                     predictor=predictor, ipi=int(_ef), mpi=20)[1]
-                rec2, qps2 = _measure(fn2, xq, gt, k)
-                rows.append(_row(dataset, "DARTH", M, efC, ef, k, rec2, qps2, Rt=DARTH_RT))
+                rec2, qps2, qt2 = _measure(fn2, xq, gt, k)
+                rows.append(_row(dataset, "DARTH", M, efC, ef, k, rec2, qps2,
+                                 Rt=DARTH_RT, build_time_s=build_t, query_time_s=qt2))
                 print(f"    DARTH     ef={ef:4d} k={k} → R@{k}={rec2:.4f}  QPS={qps2:.0f}", flush=True)
 
     del idx
@@ -209,15 +226,17 @@ def _sweep_pip(xb, xq, gt, dataset, M, efC, metric, gamma, delta):
     print(f"  [PiP] Building M={M} efC={efC} γ={gamma} Δ={delta} …", flush=True)
     t0 = time.perf_counter()
     idx = _build_pip_cpp(xb, M, efC, metric, gamma, delta)
-    print(f"  [PiP] Built in {time.perf_counter()-t0:.1f}s", flush=True)
+    build_t = round(time.perf_counter() - t0, 2)
+    print(f"  [PiP] Built in {build_t:.1f}s", flush=True)
 
     for ef in EF_SEARCH:
         for k in K_VALUES:
             fn = lambda q, _ef=ef, _k=k: idx.search(
                 np.ascontiguousarray(q, dtype=np.float32), k=int(_k), efSearch=int(_ef))[1]
-            rec, qps = _measure(fn, xq, gt, k)
+            rec, qps, qt = _measure(fn, xq, gt, k)
             rows.append(_row(dataset, "PiP", M, efC, ef, k, rec, qps,
-                             pip_gamma=gamma, pip_delta=delta))
+                             pip_gamma=gamma, pip_delta=delta,
+                             build_time_s=build_t, query_time_s=qt))
             print(f"    PiP       ef={ef:4d} k={k} → R@{k}={rec:.4f}  QPS={qps:.0f}", flush=True)
 
     del idx
@@ -239,14 +258,16 @@ def _sweep_adaef(xb, xq, dataset, M, efC):
         print(f"  [Ada-ef] Building M={M} efC={efC} k={k} …", flush=True)
         t0 = time.perf_counter()
         idx = _build_adaef_cpp(xb_n, M, efC, k, ADAEF_RT_VALUES)
-        print(f"  [Ada-ef] Built in {time.perf_counter()-t0:.1f}s", flush=True)
+        build_t = round(time.perf_counter() - t0, 2)
+        print(f"  [Ada-ef] Built in {build_t:.1f}s", flush=True)
 
         for Rt in ADAEF_RT_VALUES:
             fn = lambda q, _Rt=Rt, _k=k: idx.search(
                 np.ascontiguousarray(q, dtype=np.float32),
                 k=int(_k), target_recall=float(_Rt))[1]
-            rec, qps = _measure(fn, xq_n, gt_cos, k)
-            rows.append(_row(dataset, "Ada-ef", M, efC, 0, k, rec, qps, Rt=Rt))
+            rec, qps, qt = _measure(fn, xq_n, gt_cos, k)
+            rows.append(_row(dataset, "Ada-ef", M, efC, 0, k, rec, qps,
+                             Rt=Rt, build_time_s=build_t, query_time_s=qt))
             print(f"    Ada-ef    Rt={Rt}  k={k} → R@{k}={rec:.4f}  QPS={qps:.0f}", flush=True)
 
         del idx
@@ -259,15 +280,17 @@ def _sweep_faiss_hnsw(xb, xq, gt, dataset, M, efC):
     print(f"  [faiss-hnsw] Building M={M} efC={efC} …", flush=True)
     t0 = time.perf_counter()
     idx = _build_faiss_hnsw(xb, M, efC)
-    print(f"  [faiss-hnsw] Built in {time.perf_counter()-t0:.1f}s", flush=True)
+    build_t = round(time.perf_counter() - t0, 2)
+    print(f"  [faiss-hnsw] Built in {build_t:.1f}s", flush=True)
 
     for ef in EF_SEARCH:
         idx.hnsw.efSearch = ef
         for k in K_VALUES:
             fn = lambda q, _k=k: idx.search(
                 np.ascontiguousarray(q, dtype=np.float32), int(_k))[1]  # ef set on index above
-            rec, qps = _measure(fn, xq, gt, k)
-            rows.append(_row(dataset, "faiss-hnsw", M, efC, ef, k, rec, qps))
+            rec, qps, qt = _measure(fn, xq, gt, k)
+            rows.append(_row(dataset, "faiss-hnsw", M, efC, ef, k, rec, qps,
+                             build_time_s=build_t, query_time_s=qt))
             print(f"    faiss-hnsw ef={ef:4d} k={k} → R@{k}={rec:.4f}  QPS={qps:.0f}", flush=True)
 
     del idx

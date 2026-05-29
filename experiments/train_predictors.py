@@ -26,11 +26,9 @@ import numpy as np
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from utils.read_files import read_fvecs, read_ivecs
-from hsnw_constructionDARTH import HNSW_DARTH
-from darth.collect_training_data import collect_training_data
+from utils.read_files import read_fvecs
+from darth.collect_training_data_cpp import collect_training_data_cpp
 from darth.train_predictor import train as train_predictor
-from darth.predictor import LGBMPredictor
 
 # ── dataset registry ──────────────────────────────────────────────────────────
 
@@ -59,21 +57,37 @@ DATASETS = {
         "default_M":   [16],
         "default_efC": [200],
     },
-    "sift128": {
-        "base":  "Datasets/sift128ann/sift128_base.fvecs",
-        "learn": "Datasets/sift128ann/sift128_learn.fvecs",
+    # "sift128": {   # cut-down version (200K of 1M) — excluded
+    #     "base":  "Datasets/sift128ann/sift128_base.fvecs",
+    #     "learn": "Datasets/sift128ann/sift128_learn.fvecs",
+    #     "metric": "l2",
+    #     "max_learn": 5000,
+    #     "default_M":   [16],
+    #     "default_efC": [200],
+    # },
+    # "glove100": {  # cut-down version (200K of 1.18M) — excluded
+    #     "base":  "Datasets/glove100ann/glove100_base.fvecs",
+    #     "learn": "Datasets/glove100ann/glove100_learn.fvecs",
+    #     "metric": "l2",
+    #     "max_learn": 5000,
+    #     "default_M":   [16],
+    #     "default_efC": [200],
+    # },
+    "glove100_full": {
+        "base":  "Datasets/glove100_full/glove100_base.fvecs",
+        "learn": "Datasets/glove100_full/glove100_learn.fvecs",
         "metric": "l2",
         "max_learn": 5000,
-        "default_M":   [16],
-        "default_efC": [200],
+        "default_M":   [8, 16],
+        "default_efC": [128, 200],
     },
-    "glove100": {
-        "base":  "Datasets/glove100ann/glove100_base.fvecs",
-        "learn": "Datasets/glove100ann/glove100_learn.fvecs",
+    "sift1m": {
+        "base":  "Datasets/sift/sift_base.fvecs",
+        "learn": "Datasets/sift/sift_learn.fvecs",
         "metric": "l2",
         "max_learn": 5000,
-        "default_M":   [16],
-        "default_efC": [200],
+        "default_M":   [8, 16],
+        "default_efC": [128, 200],
     },
 }
 
@@ -99,16 +113,6 @@ def exact_gt_faiss(xb: np.ndarray, xq: np.ndarray, k: int) -> np.ndarray:
         return gt
 
 
-def build_darth_index(xb: np.ndarray, M: int, efC: int, metric: str) -> HNSW_DARTH:
-    print(f"  Building Python DARTH index M={M} efC={efC} n={len(xb)} …")
-    t0 = time.perf_counter()
-    idx = HNSW_DARTH(dim=xb.shape[1], M=M, efConstruction=efC, metric=metric)
-    for i, v in enumerate(xb):
-        idx._insert_(v, i)
-        if (i + 1) % 5000 == 0:
-            print(f"    {i+1}/{len(xb)}", flush=True)
-    print(f"  Built in {time.perf_counter()-t0:.1f}s")
-    return idx
 
 
 def train_one(dataset_name: str, M: int, efC: int, k: int,
@@ -150,15 +154,15 @@ def train_one(dataset_name: str, M: int, efC: int, k: int,
         gt_learn = exact_gt_faiss(xb, xlearn, k)
         print(f"  GT done in {time.perf_counter()-t0:.1f}s")
 
-        idx = build_darth_index(xb, M, efC, cfg["metric"])
         print(f"  Collecting training data → {csv_path.name}")
-        collect_training_data(
-            idx, xlearn, gt_learn,
+        collect_training_data_cpp(
+            xb, xlearn, gt_learn,
             k=k, efSearch=efC,
+            M=M, efConstruction=efC,
             output_path=str(csv_path),
-            logging_interval=5, verbose=True,
+            metric=cfg["metric"],
+            ipi=5, verbose=True,
         )
-        del idx
 
     print(f"  Training predictor → {model_path.name}")
     train_predictor(

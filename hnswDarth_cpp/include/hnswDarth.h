@@ -1,5 +1,6 @@
 #pragma once 
 
+#include <functional>
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
@@ -42,9 +43,24 @@ class HNSW_DARTH {
           virtual float predict(const DarthFeatures& features) const = 0;
         };
 
+        // Callback invoked at each DARTH prediction step during data collection.
+        // Arguments: features snapshot, top-k node IDs sorted by distance (closest first).
+        using DarthLogCallback = std::function<void(const DarthFeatures&, const std::vector<int>&)>;
+
         std::vector<int> query_darth(const std::vector<float>& q,int k, int efSearch,float Rt,const IPredictor* predictor,int ipi=200,int mpi=0) const;
 
         void search_darth(const std::vector<std::vector<float>>& Xq, int k ,int efSearch,float Rt,const IPredictor* predictor,int ipi,int mpi,std::vector<std::vector<float>>& D,std::vector<std::vector<int>>& I) const;
+
+        // Data-collection variant: runs full search (never exits early) and invokes
+        // log_cb at each prediction interval with the current feature snapshot and
+        // top-k node IDs so the caller can compute per-step recall.
+        void search_darth_collect(const std::vector<std::vector<float>>& Xq,
+                                  int k,
+                                  int efSearch,
+                                  int ipi,
+                                  const DarthLogCallback& log_cb,
+                                  std::vector<std::vector<float>>& D,
+                                  std::vector<std::vector<int>>& I) const;
         
     private:
         int dim_;
@@ -195,7 +211,8 @@ class HNSW_DARTH {
                                             float Rt,
                                             const IPredictor* predictor,
                                             int ipi,
-                                            int mpi) const;
+                                            int mpi,
+                                            const DarthLogCallback* log_cb = nullptr) const;
 
         static DarthFeatures darth_extract_features(const std::vector<std::pair<float,int>>& result_topk,
                                                     int ndis,

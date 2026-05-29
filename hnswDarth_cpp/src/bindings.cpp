@@ -116,6 +116,72 @@ public:
         return {D, I};
     }
 
+    // Data-collection variant: runs a full search (never exits early) and calls
+    // callback(feats_dict, topk_ids_list) at every ipi candidate pops so the
+    // caller can compute per-step recall against ground truth.
+    std::pair<py::array_t<float>, py::array_t<int>> search_darth_collect(
+        py::array_t<float, py::array::c_style | py::array::forcecast> xq,
+        int k,
+        int efSearch,
+        int ipi,
+        py::object callback
+    ) {
+        auto qbuf = xq.request();
+        if (qbuf.ndim != 2) throw std::runtime_error("xq must be 2D");
+        const int64_t nq  = (int64_t)qbuf.shape[0];
+        const int64_t dim = (int64_t)qbuf.shape[1];
+        if ((int)dim != dim_) throw std::runtime_error("dim mismatch");
+
+        const float* qptr = static_cast<const float*>(qbuf.ptr);
+        std::vector<std::vector<float>> Xqv((size_t)nq, std::vector<float>((size_t)dim_));
+        for (int64_t i = 0; i < nq; ++i) {
+            const float* row = qptr + i * dim_;
+            for (int d = 0; d < dim_; ++d) Xqv[(size_t)i][(size_t)d] = row[d];
+        }
+
+        std::vector<std::vector<float>> Dv;
+        std::vector<std::vector<int>>   Iv;
+
+        HNSW_DARTH::DarthLogCallback log_cb = [&](const HNSW_DARTH::DarthFeatures& f,
+                                                   const std::vector<int>& topk_ids) {
+            py::gil_scoped_acquire gil;
+            py::dict feats;
+            feats["ndis"]      = f.ndis;
+            feats["nstep"]     = f.nstep;
+            feats["ninserts"]  = f.ninserts;
+            feats["firstNN"]   = f.firstNN;
+            feats["closestNN"] = f.closestNN;
+            feats["furthestNN"]= f.furthestNN;
+            feats["meanNN"]    = f.meanNN;
+            feats["varNN"]     = f.varNN;
+            feats["p25NN"]     = f.p25NN;
+            feats["p50NN"]     = f.p50NN;
+            feats["p75NN"]     = f.p75NN;
+            py::list ids;
+            for (int id : topk_ids) ids.append(id);
+            callback(feats, ids);
+        };
+
+        {
+            py::gil_scoped_release release;
+            index_.search_darth_collect(Xqv, k, efSearch, ipi, log_cb, Dv, Iv);
+        }
+
+        py::array_t<int>   I({nq, (int64_t)k});
+        py::array_t<float> D({nq, (int64_t)k});
+        auto Iw = I.mutable_unchecked<2>();
+        auto Dw = D.mutable_unchecked<2>();
+        for (int64_t i = 0; i < nq; ++i) {
+            for (int j = 0; j < k; ++j) {
+                Iw(i, j) = (j < (int)Iv[(size_t)i].size()) ? Iv[(size_t)i][(size_t)j] : -1;
+                Dw(i, j) = (j < (int)Dv[(size_t)i].size())
+                         ? Dv[(size_t)i][(size_t)j]
+                         : std::numeric_limits<float>::infinity();
+            }
+        }
+        return {D, I};
+    }
+
     std::pair<py::array_t<float>, py::array_t<int>> search_darth(
         py::array_t<float, py::array::c_style | py::array::forcecast> xq,
         int k,
@@ -230,6 +296,10 @@ PYBIND11_MODULE(hnswDarth_cpp, m) {
         .def("add", &HNSWDarthIndex::add, py::arg("xb"))
         .def("search", &HNSWDarthIndex::search,
              py::arg("xq"), py::arg("k"), py::arg("efSearch"))
+        .def("search_darth_collect", &HNSWDarthIndex::search_darth_collect,
+             py::arg("xq"), py::arg("k"), py::arg("efSearch"),
+             py::arg("ipi")=5,
+             py::arg("callback")=py::none())
         .def("search_darth", &HNSWDarthIndex::search_darth,
              py::arg("xq"), py::arg("k"), py::arg("efSearch"),
              py::arg("Rt")=0.95f,
