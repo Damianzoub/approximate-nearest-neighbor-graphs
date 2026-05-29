@@ -18,6 +18,9 @@ venv
 /Datasets/random/*
 /Datasets/sift/*
 /Datasets/fashion_mnist/*
+/Datasets/siftsmall/*
+/Datasets/glove100_full/*
+/Datasets/msmarco_text/*
 
 # Distribution / packaging
 .Python
